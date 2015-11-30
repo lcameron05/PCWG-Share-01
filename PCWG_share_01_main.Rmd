@@ -1,7 +1,7 @@
 ---
 title: "PCWG_share_01_main"
 author: "Andy Clifton"
-output: html_document
+output: pdf_document
 ---
 <!-- ## Reading the source code?
 This is R Markdown. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
@@ -16,16 +16,15 @@ This document contains the results of the Power Curve Working Group's Share_01 e
 ## How to use PCWG_share_01_main.rmd
 install R (<http://www.r-project.org>) and Rstudio (<http://www.rstudio.com>), and then create a directory with all of the code and files (see below). When you click the **Knit** button in RStudio a document will be generated that includes text and results from the code embedded in _PCWG_share_01_main.rmd_.
 
-```{r, echo = FALSE}
+```{r clean up, echo = FALSE}
 rm(list = ls())
 ```
 ## User Inputs
 The _project.root_ variable defines the location of the files required for this analysis. The _made.by_ variable forms part of a label that will be added to the plots. _data.public_ is a flag that indicates whether the results of the analysis are intended to be public, or not. 
 
-```{r}
+```{r user-defined options}
 # Where can files be found?
-project.root <- file.path('/Users/aclifton/Dropbox/work/A2e PRUF Working Folder',
-                          'FY15 Activities/PCWG Share 01')
+project.root <- file.path('/Users/aclifton/Documents/confidential/projects/PCWG Share 01')
 
 # Who ran this script
 made.by = "A. Clifton, NREL"
@@ -34,7 +33,7 @@ made.by = "A. Clifton, NREL"
 data.public = TRUE
 
 # Reanalyze existing data?
-data.reanalyze = FALSE
+data.reanalyze = TRUE
 ```
 
 ## Directory structure
@@ -47,7 +46,7 @@ The folowing files should be placed in the _project.root_ directory:
 
 ## Packages
 This script requires the _ggplot2_, _grid_, _knitr_, and _XLConnect_ packages to run. These are called from the script but you may need to install them directly. For details of how to install packages, see the RStudio help. 
-```{r, message=FALSE, echo = FALSE}
+```{r load packages and define file locations, message=FALSE, echo = FALSE}
 require(ggplot2)
 require(ggthemes)
 require(grid)
@@ -81,7 +80,23 @@ theme_set(theme_PCWG(base_size = 8,
 
 # Results from each data set
 We now analyse the data from each data set. The plots are saved to their own directories in the _analysis_ directory. If _data.public_ is FALSE, plots will be created for every data file. If _data.public_ is TRUE, only the final, aggregated data plots will be created.
-```{r, results='asis', echo = FALSE}
+
+```{r check for old data, results="asis", echo = FALSE}
+# check for existing data. If none exists, set 
+if (data.reanalyze == FALSE){
+  cat(text = "\nChecking for existing data summary...")
+  
+  if (file.exists(file.path(output.dir,"AggregatedData.RData"))){
+    cat(text = "...found", file.path(output.dir,"AggregatedData.RData"), "\n")
+  } else {
+    cat(text = "... none found. \n")
+    data.reanalyze <- TRUE
+  }
+}
+
+```
+
+```{r load individual data files, results='asis', echo = FALSE}
 
 if (data.reanalyze == TRUE){
   # identify the data sets that we have available
@@ -268,9 +283,7 @@ remove(temp)
 ```
 
 ## Errors Binned by Wind Speed and Ti
-The plot
-
-
+The following plot shows how effective each set of corrections is, for each of four combinations of wind speed and turbulence intensity. Data are plotted with respect to the baseline case for that combination, such that a positive change indicates an increase in error, and a negative change indicates a decrease in error.
 
 ```{r, echo=FALSE}
 # work out the change compared to the baseline in each data set

@@ -21,7 +21,8 @@ MapAllTurbineLocations <- function(df,
   
   # read world map
   world <- readOGR(dsn=file.path(code.dir,"worldmap"),
-                   layer="TM_WORLD_BORDERS_SIMPL-0.3")
+                   layer="TM_WORLD_BORDERS_SIMPL-0.3",
+                   verbose=FALSE)
   # get countries
   countries <- world@data
   countries <- cbind(id=rownames(countries),countries)

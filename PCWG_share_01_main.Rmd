@@ -1,10 +1,11 @@
 ---
 title: "PCWG_share_01_main"
 author: "Andy Clifton"
+date: "`r Sys.Date()`"
 output: pdf_document
 ---
 <!-- ## Reading the source code?
-This is R Markdown. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+This is R Markdown. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com> or <http://kbroman.org/knitr_knutshell/pages/Rmarkdown.html>.
 
 This script is designed to be used with RStudio. When you click the **Knit** button in RStudio a document will be generated that includes the output of any embedded R code chunks within the document. -->
 
@@ -22,6 +23,8 @@ rm(list = ls())
 ## User Inputs
 The _project.root_ variable defines the location of the files required for this analysis. The _made.by_ variable forms part of a label that will be added to the plots. _data.public_ is a flag that indicates whether the results of the analysis are intended to be public, or not. 
 
+The following user inputs were used in the preparation of this document:
+
 ```{r user-defined options}
 # Where can files be found?
 project.root <- file.path('/Users/aclifton/Documents/confidential/projects/PCWG Share 01')
@@ -33,7 +36,7 @@ made.by = "A. Clifton, NREL"
 data.public = TRUE
 
 # Reanalyze existing data?
-data.reanalyze = TRUE
+data.reanalyze = FALSE
 ```
 
 ## Directory structure
@@ -45,10 +48,10 @@ The folowing files should be placed in the _project.root_ directory:
 * /__data__ directory containing all data files to be analyzed. This can include further sub directories. All .xls files contained in __data__ and sub directories will be used in the analysis.
 
 ## Packages
-This script requires the _ggplot2_, _grid_, _knitr_, and _XLConnect_ packages to run. These are called from the script but you may need to install them directly. For details of how to install packages, see the RStudio help. 
+This script requires the _ggplot2_, _grid_, _knitr_, _RColorBrewer_, _rgdal_, and _XLConnect_ packages to run. These are called from the script but you may need to install them directly. For details of how to install packages, see the RStudio help. 
+
 ```{r load packages and define file locations, message=FALSE, echo = FALSE}
 require(ggplot2)
-require(ggthemes)
 require(grid)
 require(XLConnect)
 require(knitr)
@@ -82,16 +85,25 @@ theme_set(theme_PCWG(base_size = 8,
 We now analyse the data from each data set. The plots are saved to their own directories in the _analysis_ directory. If _data.public_ is FALSE, plots will be created for every data file. If _data.public_ is TRUE, only the final, aggregated data plots will be created.
 
 ```{r check for old data, results="asis", echo = FALSE}
-# check for existing data. If none exists, set 
+# define the path to the directory that we will use to store all of the data
+output.dir = file.path(project.root, 
+                       "analysis",
+                       "all")
+# create this directory if it doesn't already exist
+dir.create(output.dir, 
+           showWarnings = FALSE,
+           recursive = TRUE)
+
+# check for existing data. If none exists, set data.reanalyze back to TRUE
 if (data.reanalyze == FALSE){
-  cat(text = "\nChecking for existing data summary...")
-  
   if (file.exists(file.path(output.dir,"AggregatedData.RData"))){
-    cat(text = "...found", file.path(output.dir,"AggregatedData.RData"), "\n")
+    cat(text = "\n This document was produced from data saved at ", file.path(output.dir,"AggregatedData.RData"), "\n")
   } else {
-    cat(text = "... none found. \n")
+    cat(text = "\nThis document was produced from raw data files.\n")
     data.reanalyze <- TRUE
   }
+} else {
+  cat(text = "\nThis document was produced from raw data files.\n")
 }
 
 ```
@@ -131,21 +143,31 @@ if (data.reanalyze == TRUE){
       plot.label <- labelSubmission(in.sub,
                                     made.by)
       # plot errors
-      PlotSubErrorsByWS(in.errors$by.WS,
-                        plot.label,
-                        output.dir)
-      PlotSubErrorsByTOD(in.errors$by.TOD,
-                         plot.label,
-                         output.dir)
-      PlotSubErrorsByCM(in.errors$by.CM,
-                        plot.label,
-                        output.dir)
-      PlotSubErrorsByWD(in.errors$by.WD,
-                        plot.label,
-                        output.dir)
-      PlotSubErrorsBy4CM(in.errors$by.4CM,
-                         plot.label,
-                         output.dir)
+      if (NROW(na.omit(in.errors$by.WS$error.val.pc)) >=1){
+        PlotSubErrorsByWS(in.errors$by.WS,
+                          plot.label,
+                          output.dir)
+      }
+      if (NROW(na.omit(in.errors$by.TOD$error.val.pc)) >=1){
+        PlotSubErrorsByTOD(in.errors$by.TOD,
+                           plot.label,
+                           output.dir)
+      }
+      if (NROW(na.omit(in.errors$by.CM$error.val.pc)) >=1){
+        PlotSubErrorsByCM(in.errors$by.CM,
+                          plot.label,
+                          output.dir)
+      }
+      if (NROW(na.omit(in.errors$by.WD$error.val.pc)) >=1){
+        PlotSubErrorsByWD(in.errors$by.WD,
+                          plot.label,
+                          output.dir)
+      }
+      if (NROW(na.omit(in.errors$by.4CM$error.val.pc)) >=1){
+        PlotSubErrorsBy4CM(in.errors$by.4CM,
+                           plot.label,
+                           output.dir)
+      }
       
       # dummy text to clear knitr buffers  
       cat(text = "\n")
@@ -160,16 +182,11 @@ if (data.reanalyze == TRUE){
 }
 ```
 
-## Turbine Sizes, Characteristics, and Locations
-
-```{r, echo=FALSE}
-# define the path to the directory that we will use
+``` {r save data, echo=FALSE}
+# define the path to the directory that we will use to store all of the data
 output.dir = file.path(project.root, 
                        "analysis",
                        "all")
-dir.create(output.dir, 
-           showWarnings = FALSE,
-           recursive = TRUE)
 
 # save the data
 if (data.reanalyze == TRUE){
@@ -184,28 +201,35 @@ if (data.reanalyze == TRUE){
 } else {
   load(file = file.path(output.dir,"AggregatedData.RData"))
 }
+```
 
+```{r plot labels, echo=FALSE}
 # create a label we'll use for the plots
 plot.label <- labelAggregate(as.character(NROW(all.data$sub)),
                              made.by)
 ```
 
-In total, `r nrow(all.data$sub)` data sets were submitted.
+## Turbine Sizes
+In total, `r nrow(all.data$sub)` data sets were submitted. The `r nrow(all.data$sub)` data sets include tests carried out in the period from `r min(all.data$meta$year.of.measurement, na.rm=TRUE)` to `r max(all.data$meta$year.of.measurement, na.rm=TRUE)`. Turbine diameters range from `r min(all.data$meta$turbine.dia)` to `r max(all.data$meta$turbine.dia)` m, while hub heights range from `r min(all.data$meta$turbine.height)` to `r max(all.data$meta$turbine.height)` m.
 
-The `r nrow(all.data$sub)` data sets include tests carried out in the period from `r min(all.data$meta$year.of.measurement)` to `r max(all.data$meta$year.of.measurement)`. Turbine diameters range from `r min(all.data$meta$turbine.dia)` to `r max(all.data$meta$turbine.dia)` m, while hub heights range from `r min(all.data$meta$turbine.height)` to `r max(all.data$meta$turbine.height)` m.
-
-```{r, echo=FALSE}
+```{r plot turbine year and size, echo=FALSE}
 PlotAllTurbineYearSizeDia(all.data$meta,
                           plot.label,
                           output.dir)
 ```
 
-## Test Characteristics
-```{r, echo=FALSE}
+## Turbine Locations
+The coutry in which the turbine was located was reported in `r NROW(na.omit(all.data$meta$Geography.country))` of the data sets. 
+
+```{r Histogram of turbine locations, echo=FALSE, fig.width = 6.5, fig.height = 3.5 }
 PlotAllTurbineLocations(all.data$meta,
                         plot.label,
                         output.dir)
+``` 
 
+Data were obtained from turbines in `r NROW(unique(na.omit(all.data$meta$Geography.country)))` countries including `r TextList(unique(na.omit(all.data$meta$Geography.country)))`. 
+
+```{r Map of turbine locations, message = FALSE, echo=FALSE, fig.width = 6.5, fig.height = 3.5}
 MapAllTurbineLocations(all.data$meta,
                        plot.label,
                        code.dir,
@@ -218,7 +242,8 @@ In this section, data from all of the individual submissions have been combined.
 
 ## Baseline Inner and Outer Range Error Histograms
 
-```{r, echo = FALSE}
+
+```{r baseline inner and outer range histogram, echo = FALSE, fig.width = 6.5, fig.height = 3.5}
 PlotAllBaselineErrorsByRange(all.data$errors$by.Range,
                              plot.label,
                              output.dir)
@@ -230,7 +255,7 @@ plot baseline inner range versus other inner range NME, color by method
 
 
 ## The Effect of The Turbulence Correction on the Outer Range Error
-```{r, echo = FALSE}
+```{r, echo = FALSE, fig.width = 6.5, fig.height = 3.5}
 PlotAllOuterErrorsTurbulenceCorrection(all.data$errors$by.Range,
                                        plot.label,
                                        output.dir)
@@ -238,7 +263,7 @@ PlotAllOuterErrorsTurbulenceCorrection(all.data$errors$by.Range,
 
 ## Errors versus wind speed for all submissions
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, fig.width = 6.5, fig.height = 3.5}
 PlotAllErrorsByWSBin_Lines(all.data$errors$by.WS,
                            plot.label,
                            output.dir)
@@ -246,14 +271,14 @@ PlotAllErrorsByWSBin_Lines(all.data$errors$by.WS,
 
 ## Errors Binned by Wind Speed
 
-```{r, echo=FALSE}
+```{r, echo=FALSE,  fig.width = 6.5, fig.height = 3.5}
 PlotAllErrorsByWSBin_BoxNWhiskers(all.data$errors$by.WS,
                                   plot.label,
                                   output.dir)
 ```               
 
 ## Change in errors binned by Wind Speed
-```{r, echo=FALSE}
+```{r, echo=FALSE, fig.width = 6.5, fig.height = 3.5}
 # work out the change compared to the baseline in each data set
 temp <- NULL
 for (file in unique(all.data$errors$by.WS$data.file)){
@@ -285,7 +310,7 @@ remove(temp)
 ## Errors Binned by Wind Speed and Ti
 The following plot shows how effective each set of corrections is, for each of four combinations of wind speed and turbulence intensity. Data are plotted with respect to the baseline case for that combination, such that a positive change indicates an increase in error, and a negative change indicates a decrease in error.
 
-```{r, echo=FALSE}
+```{r, echo=FALSE, fig.width = 6.5, fig.height = 4.5}
 # work out the change compared to the baseline in each data set
 temp <- NULL
 for (file in unique(all.data$errors$by.4CM$data.file)){

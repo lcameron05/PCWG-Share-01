@@ -1,5 +1,5 @@
 #Introduction
-This is the repository for an R package that provides code to aggregate responses to the Power Curve Working Group "PCWG_Share_01" exercise. More details of the exercise can be found at http://www.pcwg.org. 
+This is the repository for an R package that provides code to aggregate responses to the Power Curve Working Group "PCWG_Share_01" exercise. More details of the exercise can be found at http://www.pcwg.org and http://www.pcwg.org/PCWG-Share-01/PCWG-Share-01-Definition-Document.pdf.
 
 #Requirements
 1. A working installation of R. This can be obtained from e.g. http://r-project.org.

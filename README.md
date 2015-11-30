@@ -10,7 +10,7 @@ This is the repository for an R package that provides code to aggregate response
 Click on the "Download ZIP" button on the lower right of this page. 
 
 # How To Use This Code
-1. Create a directory somewhere and place the contents of the zip file into that directory (let's call this `$root`). 
+1. Create a directory somewhere and place the contents of the zip file into that directory (let's call this `$root`). *It is recommended that there be nothing else in the directory*.
 2. Load the PWCG tool data files into a 'data' directory in `$root`. You can add directories for different sites, etc.
 3. Open `PCWG_share_01_main.rmd` in Rstudio. 
   1. Modify `project.root` to be `$root`.

@@ -1,0 +1,15 @@
+# confidential data
+.Rdata
+/data/*
+/analysis/*
+/excluded data
+
+# History files
+.Rhistory
+.Rapp.history
+
+# Example code in package build process
+*-Ex.R
+
+# RStudio files
+.Rproj.user/

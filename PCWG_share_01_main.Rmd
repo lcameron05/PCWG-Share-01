@@ -1,0 +1,304 @@
+---
+title: "PCWG_share_01_main"
+author: "Andy Clifton"
+output: html_document
+---
+<!-- ## Reading the source code?
+This is R Markdown. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+This script is designed to be used with RStudio. When you click the **Knit** button in RStudio a document will be generated that includes the output of any embedded R code chunks within the document. -->
+
+
+
+# Introduction
+This document contains the results of the Power Curve Working Group's Share_01 exercise, which ran from October to December 2015. The document and results are generated using the programing language `R` from the _PCWG_share_01_main.rmd_ file and can be run by participants themselves.
+
+## How to use PCWG_share_01_main.rmd
+install R (<http://www.r-project.org>) and Rstudio (<http://www.rstudio.com>), and then create a directory with all of the code and files (see below). When you click the **Knit** button in RStudio a document will be generated that includes text and results from the code embedded in _PCWG_share_01_main.rmd_.
+
+```{r, echo = FALSE}
+rm(list = ls())
+```
+## User Inputs
+The _project.root_ variable defines the location of the files required for this analysis. The _made.by_ variable forms part of a label that will be added to the plots. _data.public_ is a flag that indicates whether the results of the analysis are intended to be public, or not. 
+
+```{r}
+# Where can files be found?
+project.root <- file.path('/Users/aclifton/Dropbox/work/A2e PRUF Working Folder',
+                          'FY15 Activities/PCWG Share 01')
+
+# Who ran this script
+made.by = "A. Clifton, NREL"
+
+# Will data be public or not?
+data.public = TRUE
+
+# Reanalyze existing data?
+data.reanalyze = FALSE
+```
+
+## Directory structure
+The folowing files should be placed in the _project.root_ directory:
+
+* PCWG_share_01_main.Rmd
+* /__analysis__ directory containg results of the analysis
+* /__code__ directory containing functions required for the analysis
+* /__data__ directory containing all data files to be analyzed. This can include further sub directories. All .xls files contained in __data__ and sub directories will be used in the analysis.
+
+## Packages
+This script requires the _ggplot2_, _grid_, _knitr_, and _XLConnect_ packages to run. These are called from the script but you may need to install them directly. For details of how to install packages, see the RStudio help. 
+```{r, message=FALSE, echo = FALSE}
+require(ggplot2)
+require(ggthemes)
+require(grid)
+require(XLConnect)
+require(knitr)
+require(reshape2)
+
+# define the working directory
+working.dir <- project.root
+setwd(working.dir)
+
+#identify data directory
+data.dir = file.path(project.root,
+                     "data")
+
+# define where functions live
+code.dir = file.path(project.root,
+                     "code")
+
+# source these functions
+code.files = dir(code.dir, pattern = "\\.R$")
+for (file in code.files){
+  source(file = file.path(code.dir,file))
+}
+
+# configure graphics appearance
+theme_set(theme_PCWG(base_size = 8, 
+                     base_family = "sans"))
+
+```
+
+# Results from each data set
+We now analyse the data from each data set. The plots are saved to their own directories in the _analysis_ directory. If _data.public_ is FALSE, plots will be created for every data file. If _data.public_ is TRUE, only the final, aggregated data plots will be created.
+```{r, results='asis', echo = FALSE}
+
+if (data.reanalyze == TRUE){
+  # identify the data sets that we have available
+  data.files = dir(data.dir, 
+                   recursive = TRUE,
+                   pattern = "[.xls]")
+  
+  # create an empty list to store data in at a later date 
+  all.data <- list(sub = NULL,
+                   meta = NULL,
+                   errors = NULL)
+  for (data.file in data.files){
+    # Read this data set
+    wb <- loadWorkbook(file.path(data.dir,data.file))
+    in.sub <- ReadSubmissionData(wb)
+    in.sub$data.file <- data.file
+    in.meta <- ReadMetaData(wb)
+    in.meta$data.file <- data.file
+    # get *all* errors
+    in.errors <- ReadErrorData(wb)
+    
+    if (data.public == FALSE){
+      # write out results from this case to file and to the document  
+      cat(text = "\n## Data set", in.sub$random.ID, "from", data.file, "\n")
+      # check to see if we have a directory for this case
+      output.dir = file.path(project.root, 
+                             "analysis",
+                             strsplit(data.file, "\\.")[[1]][1])
+      dir.create(output.dir, showWarnings = FALSE,recursive = TRUE)
+      
+      # create a label we'll use to annotate plots
+      plot.label <- labelSubmission(in.sub,
+                                    made.by)
+      # plot errors
+      PlotSubErrorsByWS(in.errors$by.WS,
+                        plot.label,
+                        output.dir)
+      PlotSubErrorsByTOD(in.errors$by.TOD,
+                         plot.label,
+                         output.dir)
+      PlotSubErrorsByCM(in.errors$by.CM,
+                        plot.label,
+                        output.dir)
+      PlotSubErrorsByWD(in.errors$by.WD,
+                        plot.label,
+                        output.dir)
+      PlotSubErrorsBy4CM(in.errors$by.4CM,
+                         plot.label,
+                         output.dir)
+      
+      # dummy text to clear knitr buffers  
+      cat(text = "\n")
+    }
+    
+    # prepare data for aggregation
+    all.data <- aggregateDataSets(all.data,
+                                  in.sub,
+                                  in.meta,
+                                  in.errors)
+  }
+}
+```
+
+## Turbine Sizes, Characteristics, and Locations
+
+```{r, echo=FALSE}
+# define the path to the directory that we will use
+output.dir = file.path(project.root, 
+                       "analysis",
+                       "all")
+dir.create(output.dir, 
+           showWarnings = FALSE,
+           recursive = TRUE)
+
+# save the data
+if (data.reanalyze == TRUE){
+  save(list = c("project.root",
+                "made.by",
+                "data.public",
+                "working.dir",
+                "output.dir",
+                "all.data"), 
+       file = file.path(output.dir,"AggregatedData.RData"),
+       envir = .GlobalEnv)
+} else {
+  load(file = file.path(output.dir,"AggregatedData.RData"))
+}
+
+# create a label we'll use for the plots
+plot.label <- labelAggregate(as.character(NROW(all.data$sub)),
+                             made.by)
+```
+
+In total, `r nrow(all.data$sub)` data sets were submitted.
+
+The `r nrow(all.data$sub)` data sets include tests carried out in the period from `r min(all.data$meta$year.of.measurement)` to `r max(all.data$meta$year.of.measurement)`. Turbine diameters range from `r min(all.data$meta$turbine.dia)` to `r max(all.data$meta$turbine.dia)` m, while hub heights range from `r min(all.data$meta$turbine.height)` to `r max(all.data$meta$turbine.height)` m.
+
+```{r, echo=FALSE}
+PlotAllTurbineYearSizeDia(all.data$meta,
+                          plot.label,
+                          output.dir)
+```
+
+## Test Characteristics
+```{r, echo=FALSE}
+PlotAllTurbineLocations(all.data$meta,
+                        plot.label,
+                        output.dir)
+
+MapAllTurbineLocations(all.data$meta,
+                       plot.label,
+                       code.dir,
+                       output.dir)
+
+```
+
+# Aggregated results
+In this section, data from all of the individual submissions have been combined. 
+
+## Baseline Inner and Outer Range Error Histograms
+
+```{r, echo = FALSE}
+PlotAllBaselineErrorsByRange(all.data$errors$by.Range,
+                             plot.label,
+                             output.dir)
+```
+
+## Comparison of inner and outer range errors
+
+plot baseline inner range versus other inner range NME, color by method
+
+
+## The Effect of The Turbulence Correction on the Outer Range Error
+```{r, echo = FALSE}
+PlotAllOuterErrorsTurbulenceCorrection(all.data$errors$by.Range,
+                                       plot.label,
+                                       output.dir)
+```
+
+## Errors versus wind speed for all submissions
+
+```{r, echo=FALSE}
+PlotAllErrorsByWSBin_Lines(all.data$errors$by.WS,
+                           plot.label,
+                           output.dir)
+```               
+
+## Errors Binned by Wind Speed
+
+```{r, echo=FALSE}
+PlotAllErrorsByWSBin_BoxNWhiskers(all.data$errors$by.WS,
+                                  plot.label,
+                                  output.dir)
+```               
+
+## Change in errors binned by Wind Speed
+```{r, echo=FALSE}
+# work out the change compared to the baseline in each data set
+temp <- NULL
+for (file in unique(all.data$errors$by.WS$data.file)){
+  sub <- all.data$errors$by.WS[all.data$errors$by.WS$data.file == file,]
+  for (ds in unique(sub$correction)){
+    for (WS.cell in unique(sub$x.min)){
+      # get the reference NME and NMAE
+      baseline <- sub[(sub$correction == "Baseline") & 
+                        (sub$x.min == WS.cell),]
+      # get the NME and NMAE for this cell
+      new <- sub[(sub$correction == ds) & 
+                   (sub$x.min == WS.cell),]
+      delta <- data.frame(new,
+                          error.delta.pc = c(new$error.val.pc[new$error.name == "NME"] - baseline$error.val.pc[baseline$error.name == "NME"],
+                                             new$error.val.pc[new$error.name == "NMAE"] - baseline$error.val.pc[baseline$error.name == "NMAE"]))
+      temp <- rbind(temp,
+                    delta)
+    }
+  }
+}
+
+PlotAllChangeInErrorsByWSBin(temp,
+                             plot.label,
+                             output.dir)
+
+remove(temp)
+```
+
+## Errors Binned by Wind Speed and Ti
+The plot
+
+
+
+```{r, echo=FALSE}
+# work out the change compared to the baseline in each data set
+temp <- NULL
+for (file in unique(all.data$errors$by.4CM$data.file)){
+  sub <- all.data$errors$by.4CM[all.data$errors$by.4CM$data.file == file,]
+  for (ds in unique(sub$correction)){
+    for (WS.cell in unique(sub$WS.cell)){
+      for (Ti.cell in unique(sub$Ti.cell)){
+        # get the reference NME and NMAE
+        baseline <- sub[(sub$correction == "Baseline") & 
+                          (sub$WS.cell == WS.cell) &
+                          (sub$Ti.cell == Ti.cell),]
+        # get the NME and NMAE for this cell
+        new <- sub[(sub$correction == ds) & 
+                     (sub$WS.cell == WS.cell) &
+                     (sub$Ti.cell == Ti.cell),]
+        delta <- data.frame(new,
+                            error.delta.pc = c(new$error.val.pc[new$error.name == "NME"] - baseline$error.val.pc[baseline$error.name == "NME"],
+                                               new$error.val.pc[new$error.name == "NMAE"] - baseline$error.val.pc[baseline$error.name == "NMAE"]))
+        temp <- rbind(temp,
+                      delta)
+      }
+    }
+  }
+}
+
+PlotAllChangeInErrorsBy4CM(temp,
+                           plot.label,
+                           output.dir)
+```               

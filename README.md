@@ -1,10 +1,10 @@
 #Introduction
-This is the repository for an R package tha provides code to aggregate responses to the Power Curve Working Group "PCEWG_Share_01" exercise.
+This is the repository for an R package that provides code to aggregate responses to the Power Curve Working Group "PCWG_Share_01" exercise. More details of the exercise can be found at http://www.pcwg.org. 
 
 #Requirements
 1. A working installation of R. This can be obtained from e.g. http://r-project.org.
-2. Some experience with using R to explore data and plot results.
-3. Basic understanding of how to use command line programs.
+2. A GUI for R. R-studio is strongly recommended. See http://rstudio.com.
+3. Some experience with using R to explore data and plot results.
 
 #Download
 Click on the "Download ZIP" button on the lower right of this page. 

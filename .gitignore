@@ -1,8 +1,11 @@
 # confidential data
 .Rdata
 /data/*
+/figure-latex/*
 /analysis/*
 /excluded data
+*.pdf
+*.html
 
 # History files
 .Rhistory

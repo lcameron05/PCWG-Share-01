@@ -1,4 +1,4 @@
-subReadRangeErrorData <- function(wb,sheet){
+ReadRangeErrorData <- function(wb,sheet){
   # reads a PCWG Share 01 file and returns data about the error
   #
   # Args:

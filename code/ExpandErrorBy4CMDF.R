@@ -1,4 +1,4 @@
-subExpandErrorBy4CMDF <-function(df.in,
+ExpandErrorBy4CMDF <-function(df.in,
                                  sheets){
   # create empty DF
   # note that we need to overwrite the cell structure in the excel sheet
@@ -17,17 +17,17 @@ subExpandErrorBy4CMDF <-function(df.in,
                                              levels = sheets),
                             cell = factor(x = c("LWS-LTI","LWS-HTI","HWS-LTI","HWS-HTI"),
                                           levels = cell.levels),
-                            data.count = subCSVToNumericVector(df.in$data.count),
+                            data.count = CSVToNumericVector(df.in$data.count),
                             error.name = as.factor("NME"),
-                            error.val = subCSVToNumericVector(df.in$NME),
+                            error.val = CSVToNumericVector(df.in$NME),
                             stringsAsFactors=FALSE),
                  data.frame(correction = factor(x=df.in$sheet.name,
                                              levels = sheets),
                             cell = factor(c("LWS-LTI","LWS-HTI","HWS-LTI","HWS-HTI"),
                                           levels = cell.levels),
-                            data.count = subCSVToNumericVector(df.in$data.count),
+                            data.count = CSVToNumericVector(df.in$data.count),
                             error.name = as.factor("NMAE"),
-                            error.val = subCSVToNumericVector(df.in$NMAE),
+                            error.val = CSVToNumericVector(df.in$NMAE),
                             stringsAsFactors=FALSE))
   
   # convert errrors into percentages

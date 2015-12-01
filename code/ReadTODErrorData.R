@@ -1,5 +1,5 @@
-subReadCMErrorData <- function(wb,sheet){
-  # reads a PCWG Share 01 file and returns data about the error
+ReadTODErrorData <- function(wb,sheet){
+  # reads a PCWG Share 01 file and returns data about the baseline accuracy
   #
   # Args:
   # data.file: name of the data file to be read
@@ -11,10 +11,10 @@ subReadCMErrorData <- function(wb,sheet){
   setMissingValue(wb," ")
   
   # get data...
-  # By calendar month
+  # By normalized wind speed bin
   bin = paste(as.character(readWorksheet(wb,
                                          sheet = sheet,
-                                         region = "D15:O15",
+                                         region = "D11:AA11",
                                          header = FALSE,
                                          autofitCol = FALSE,
                                          autofitRow= FALSE)),
@@ -22,7 +22,7 @@ subReadCMErrorData <- function(wb,sheet){
               sep=" ")
   data.count = paste(as.character(readWorksheet(wb,
                                                 sheet = sheet,
-                                                region = "D16:O16",
+                                                region = "D12:AA12",
                                                 header = FALSE,
                                                 autofitCol = FALSE,
                                                 autofitRow= FALSE)),
@@ -30,7 +30,7 @@ subReadCMErrorData <- function(wb,sheet){
                      sep=" ")
   NME = paste(as.character(readWorksheet(wb,
                                          sheet = sheet,
-                                         region = "D17:O17",
+                                         region = "D13:AA13",
                                          header = FALSE,
                                          autofitCol = FALSE,
                                          autofitRow= FALSE)),
@@ -38,7 +38,7 @@ subReadCMErrorData <- function(wb,sheet){
               sep=" ")
   NMAE = paste(as.character(readWorksheet(wb,
                                           sheet = sheet,
-                                          region = "D18:O18",
+                                          region = "D14:AA14",
                                           header = FALSE,
                                           autofitCol = FALSE,
                                           autofitRow= FALSE)),

@@ -1,4 +1,4 @@
-subReadTODErrorData <- function(wb,sheet){
+ReadWDErrorData <- function(wb,sheet){
   # reads a PCWG Share 01 file and returns data about the baseline accuracy
   #
   # Args:
@@ -14,7 +14,7 @@ subReadTODErrorData <- function(wb,sheet){
   # By normalized wind speed bin
   bin = paste(as.character(readWorksheet(wb,
                                          sheet = sheet,
-                                         region = "D11:AA11",
+                                         region = "D19:AM19",
                                          header = FALSE,
                                          autofitCol = FALSE,
                                          autofitRow= FALSE)),
@@ -22,7 +22,7 @@ subReadTODErrorData <- function(wb,sheet){
               sep=" ")
   data.count = paste(as.character(readWorksheet(wb,
                                                 sheet = sheet,
-                                                region = "D12:AA12",
+                                                region = "D20:AM20",
                                                 header = FALSE,
                                                 autofitCol = FALSE,
                                                 autofitRow= FALSE)),
@@ -30,7 +30,7 @@ subReadTODErrorData <- function(wb,sheet){
                      sep=" ")
   NME = paste(as.character(readWorksheet(wb,
                                          sheet = sheet,
-                                         region = "D13:AA13",
+                                         region = "D21:AM21",
                                          header = FALSE,
                                          autofitCol = FALSE,
                                          autofitRow= FALSE)),
@@ -38,7 +38,7 @@ subReadTODErrorData <- function(wb,sheet){
               sep=" ")
   NMAE = paste(as.character(readWorksheet(wb,
                                           sheet = sheet,
-                                          region = "D14:AA14",
+                                          region = "D21:AM21",
                                           header = FALSE,
                                           autofitCol = FALSE,
                                           autofitRow= FALSE)),

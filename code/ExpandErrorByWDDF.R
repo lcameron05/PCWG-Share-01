@@ -1,4 +1,4 @@
-subExpandErrorByWDDF <-function(df.in,
+ExpandErrorByWDDF <-function(df.in,
                                 sheets){
   # create empty DF
   df.out <- data.frame(correction = factor(x=character(),
@@ -13,17 +13,17 @@ subExpandErrorByWDDF <-function(df.in,
   df.out <-rbind(df.out,
                  data.frame(correction = factor(x=df.in$sheet.name,
                                              levels = sheets),
-                       subCSVToRange(df.in$bin),
-                       data.count = subCSVToNumericVector(df.in$data.count),
+                       CSVToRange(df.in$bin),
+                       data.count = CSVToNumericVector(df.in$data.count),
                        error.name = "NME",
-                       error.val = subCSVToNumericVector(df.in$NME),
+                       error.val = CSVToNumericVector(df.in$NME),
                        stringsAsFactors=FALSE),
                  data.frame(correction = factor(x=df.in$sheet.name,
                                              levels = sheets),
-                       subCSVToRange(df.in$bin),
-                       data.count = subCSVToNumericVector(df.in$data.count),
+                       CSVToRange(df.in$bin),
+                       data.count = CSVToNumericVector(df.in$data.count),
                        error.name = "NMAE",
-                       error.val = subCSVToNumericVector(df.in$NMAE),
+                       error.val = CSVToNumericVector(df.in$NMAE),
                        stringsAsFactors=FALSE))
   
   # convert errrors into percentages

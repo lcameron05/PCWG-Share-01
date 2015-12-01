@@ -9,11 +9,11 @@ ReadSubmissionData <- function(wb){
   
   require(XLConnect)
   # get data
-  data.sub = data.frame(sw.version = subNullToNA(readWorksheet(wb, 
+  data.sub = data.frame(sw.version = NullToNA(readWorksheet(wb, 
                                                                sheet = "Submission",
                                                                region = "C8",
                                                                header = FALSE)),
-                        export.complete = subNullToNA(readWorksheet(wb, 
+                        export.complete = NullToNA(readWorksheet(wb, 
                                                                     sheet = "Submission",
                                                                     region = "C9",
                                                                     header = FALSE,

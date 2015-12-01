@@ -1,4 +1,4 @@
-subCSVToCharacterVector <- function(text.in){
+CSVToCharacterVector <- function(text.in){
   
   # supress warnings
   oldw <- getOption("warn")

@@ -1,11 +1,11 @@
-subExpandErrorByRangeDF <-function(df.in,
+ExpandErrorByCMDF <-function(df.in,
                                 sheets){
   # create empty DF
-  range.levels <- c("Inner","Outer")
+  month.levels <- c("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sept","Oct","Nov","Dev")
   df.out <- data.frame(correction = factor(x=character(),
                                         levels = sheets),
-                       range = factor(x=character(),
-                                      levels = range.levels),
+                       month = factor(x=character(),
+                                      levels = month.levels),
                        data.count = double(),
                        error.name = factor(x=character(),
                                            levels = c("NME","NMAE")),
@@ -14,19 +14,19 @@ subExpandErrorByRangeDF <-function(df.in,
   df.out <-rbind(df.out,
                  data.frame(correction = factor(x=df.in$sheet.name,
                                              levels = sheets),
-                            range = factor(subCSVToCharacterVector(df.in$bin),
-                                           levels = range.levels),
-                            data.count = subCSVToNumericVector(df.in$data.count),
+                            month = factor(CSVToCharacterVector(df.in$bin),
+                                           levels = month.levels),
+                            data.count = CSVToNumericVector(df.in$data.count),
                             error.name = as.factor("NME"),
-                            error.val = subCSVToNumericVector(df.in$NME),
+                            error.val = CSVToNumericVector(df.in$NME),
                             stringsAsFactors=FALSE),
                  data.frame(correction = factor(x=df.in$sheet.name,
                                              levels = sheets),
-                            range = factor(subCSVToCharacterVector(df.in$bin),
-                                           levels = range.levels),
-                            data.count = subCSVToNumericVector(df.in$data.count),
+                            month = factor(CSVToCharacterVector(df.in$bin),
+                                           levels = month.levels),
+                            data.count = CSVToNumericVector(df.in$data.count),
                             error.name = as.factor("NMAE"),
-                            error.val = subCSVToNumericVector(df.in$NMAE),
+                            error.val = CSVToNumericVector(df.in$NMAE),
                             stringsAsFactors=FALSE))
   
   # convert errrors into percentages

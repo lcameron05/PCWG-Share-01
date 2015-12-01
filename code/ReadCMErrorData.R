@@ -1,5 +1,5 @@
-subReadWDErrorData <- function(wb,sheet){
-  # reads a PCWG Share 01 file and returns data about the baseline accuracy
+ReadCMErrorData <- function(wb,sheet){
+  # reads a PCWG Share 01 file and returns data about the error
   #
   # Args:
   # data.file: name of the data file to be read
@@ -11,10 +11,10 @@ subReadWDErrorData <- function(wb,sheet){
   setMissingValue(wb," ")
   
   # get data...
-  # By normalized wind speed bin
+  # By calendar month
   bin = paste(as.character(readWorksheet(wb,
                                          sheet = sheet,
-                                         region = "D19:AM19",
+                                         region = "D15:O15",
                                          header = FALSE,
                                          autofitCol = FALSE,
                                          autofitRow= FALSE)),
@@ -22,7 +22,7 @@ subReadWDErrorData <- function(wb,sheet){
               sep=" ")
   data.count = paste(as.character(readWorksheet(wb,
                                                 sheet = sheet,
-                                                region = "D20:AM20",
+                                                region = "D16:O16",
                                                 header = FALSE,
                                                 autofitCol = FALSE,
                                                 autofitRow= FALSE)),
@@ -30,7 +30,7 @@ subReadWDErrorData <- function(wb,sheet){
                      sep=" ")
   NME = paste(as.character(readWorksheet(wb,
                                          sheet = sheet,
-                                         region = "D21:AM21",
+                                         region = "D17:O17",
                                          header = FALSE,
                                          autofitCol = FALSE,
                                          autofitRow= FALSE)),
@@ -38,7 +38,7 @@ subReadWDErrorData <- function(wb,sheet){
               sep=" ")
   NMAE = paste(as.character(readWorksheet(wb,
                                           sheet = sheet,
-                                          region = "D21:AM21",
+                                          region = "D18:O18",
                                           header = FALSE,
                                           autofitCol = FALSE,
                                           autofitRow= FALSE)),

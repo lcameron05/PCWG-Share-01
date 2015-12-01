@@ -1,5 +1,5 @@
-subReadWSErrorData <- function(wb,sheet){
-  # reads a PCWG Share 01 file and returns data about the baseline accuracy
+Read4CMErrorData <- function(wb,sheet){
+  # reads a PCWG Share 01 file and returns data about the error
   #
   # Args:
   # data.file: name of the data file to be read
@@ -11,10 +11,10 @@ subReadWSErrorData <- function(wb,sheet){
   setMissingValue(wb," ")
   
   # get data...
-  # By normalized wind speed bin
+  # By Four Cell Matrix
   bin = paste(as.character(readWorksheet(wb,
                                          sheet = sheet,
-                                         region = "D7:R7",
+                                         region = "D27:G27",
                                          header = FALSE,
                                          autofitCol = FALSE,
                                          autofitRow= FALSE)),
@@ -22,7 +22,7 @@ subReadWSErrorData <- function(wb,sheet){
               sep=" ")
   data.count = paste(as.character(readWorksheet(wb,
                                                 sheet = sheet,
-                                                region = "D8:R8",
+                                                region = "D28:G28",
                                                 header = FALSE,
                                                 autofitCol = FALSE,
                                                 autofitRow= FALSE)),
@@ -30,7 +30,7 @@ subReadWSErrorData <- function(wb,sheet){
                      sep=" ")
   NME = paste(as.character(readWorksheet(wb,
                                          sheet = sheet,
-                                         region = "D9:R9",
+                                         region = "D29:G29",
                                          header = FALSE,
                                          autofitCol = FALSE,
                                          autofitRow= FALSE)),
@@ -38,7 +38,7 @@ subReadWSErrorData <- function(wb,sheet){
               sep=" ")
   NMAE = paste(as.character(readWorksheet(wb,
                                           sheet = sheet,
-                                          region = "D10:R10",
+                                          region = "D30:G30",
                                           header = FALSE,
                                           autofitCol = FALSE,
                                           autofitRow= FALSE)),

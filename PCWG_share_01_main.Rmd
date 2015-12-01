@@ -1,15 +1,13 @@
 ---
 title: "PCWG_share_01_main"
 author: "Andy Clifton"
-date: "`r Sys.Date()`"
+date: '`r Sys.Date()`'
 output: pdf_document
 ---
 <!-- ## Reading the source code?
 This is R Markdown. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com> or <http://kbroman.org/knitr_knutshell/pages/Rmarkdown.html>.
 
 This script is designed to be used with RStudio. When you click the **Knit** button in RStudio a document will be generated that includes the output of any embedded R code chunks within the document. -->
-
-
 
 # Introduction
 This document contains the results of the Power Curve Working Group's Share_01 exercise, which ran from October to December 2015. The document and results are generated using the programing language `R` from the _PCWG_share_01_main.rmd_ file and can be run by participants themselves.
@@ -21,7 +19,7 @@ install R (<http://www.r-project.org>) and Rstudio (<http://www.rstudio.com>), a
 rm(list = ls())
 ```
 ## User Inputs
-The _project.root_ variable defines the location of the files required for this analysis. The _made.by_ variable forms part of a label that will be added to the plots. _data.public_ is a flag that indicates whether the results of the analysis are intended to be public, or not. 
+The _project.root_ variable defines the location of the files required for this analysis. The _made.by_ variable forms part of a label that will be added to the plots. _data.public_ is a flag that indicates whether the results of the analysis are intended to be public, or not. _data.reanalyze_ is a flag that indicates whether individual data files should be reanalyzed (_data.reanalyze = TRUE_) or whether saved, aggregated data should be used (_data.reanalyze = FALSE_). 
 
 The following user inputs were used in the preparation of this document:
 
@@ -38,51 +36,6 @@ data.public = TRUE
 # Reanalyze existing data?
 data.reanalyze = FALSE
 ```
-
-## Directory structure
-The folowing files should be placed in the _project.root_ directory:
-
-* PCWG_share_01_main.Rmd
-* /__analysis__ directory containg results of the analysis
-* /__code__ directory containing functions required for the analysis
-* /__data__ directory containing all data files to be analyzed. This can include further sub directories. All .xls files contained in __data__ and sub directories will be used in the analysis.
-
-## Packages
-This script requires the _ggplot2_, _grid_, _knitr_, _RColorBrewer_, _rgdal_, and _XLConnect_ packages to run. These are called from the script but you may need to install them directly. For details of how to install packages, see the RStudio help. 
-
-```{r load packages and define file locations, message=FALSE, echo = FALSE}
-require(ggplot2)
-require(grid)
-require(XLConnect)
-require(knitr)
-require(reshape2)
-
-# define the working directory
-working.dir <- project.root
-setwd(working.dir)
-
-#identify data directory
-data.dir = file.path(project.root,
-                     "data")
-
-# define where functions live
-code.dir = file.path(project.root,
-                     "code")
-
-# source these functions
-code.files = dir(code.dir, pattern = "\\.R$")
-for (file in code.files){
-  source(file = file.path(code.dir,file))
-}
-
-# configure graphics appearance
-theme_set(theme_PCWG(base_size = 8, 
-                     base_family = "sans"))
-
-```
-
-# Results from each data set
-We now analyse the data from each data set. The plots are saved to their own directories in the _analysis_ directory. If _data.public_ is FALSE, plots will be created for every data file. If _data.public_ is TRUE, only the final, aggregated data plots will be created.
 
 ```{r check for old data, results="asis", echo = FALSE}
 # define the path to the directory that we will use to store all of the data
@@ -107,6 +60,56 @@ if (data.reanalyze == FALSE){
 }
 
 ```
+
+## Packages
+This script requires the _ggplot2_, _grid_, _knitr_, _RColorBrewer_, _rgdal_, and _XLConnect_ packages to run. These are called from the script but you may need to install them directly. For details of how to install packages, see the RStudio help. 
+
+```{r load packages, message=FALSE, echo = FALSE}
+require(ggplot2)
+require(grid)
+require(XLConnect)
+require(knitr)
+require(reshape2)
+```
+
+## Directory structure
+
+```{r define file locations, message=FALSE, echo = FALSE}
+# define the working directory
+working.dir <- project.root
+setwd(working.dir)
+
+#identify data directory
+data.dir = file.path(project.root,
+                     "data")
+
+# define where functions live
+code.dir = file.path(project.root,
+                     "code")
+
+# source these functions
+code.files = dir(code.dir, pattern = "\\.R$")
+for (file in code.files){
+  source(file = file.path(code.dir,file))
+}
+
+```
+The folowing files should be placed in the _project.root_ directory:
+
+* PCWG_share_01_main.Rmd
+* /__analysis__ directory containg results of the analysis
+* /__code__ directory containing functions required for the analysis
+* /__data__ directory containing all data files to be analyzed. This can include further sub directories. All .xls files contained in __data__ and sub directories will be used in the analysis.
+
+```{r configure graphics, message=FALSE, echo = FALSE}
+# configure graphics appearance
+theme_set(theme_PCWG(base_size = 8, 
+                     base_family = "sans"))
+
+```
+
+# Results from each data set
+We now analyse the data from each data set. The plots are saved to their own directories in the _analysis_ directory. If _data.public_ is FALSE, plots will be created for every data set. If _data.public_ is TRUE, only the final, aggregated data plots will be created.
 
 ```{r load individual data files, results='asis', echo = FALSE}
 
@@ -209,10 +212,11 @@ plot.label <- labelAggregate(as.character(NROW(all.data$sub)),
                              made.by)
 ```
 
+# Data Sets
 ## Turbine Sizes
 In total, `r nrow(all.data$sub)` data sets were submitted. The `r nrow(all.data$sub)` data sets include tests carried out in the period from `r min(all.data$meta$year.of.measurement, na.rm=TRUE)` to `r max(all.data$meta$year.of.measurement, na.rm=TRUE)`. Turbine diameters range from `r min(all.data$meta$turbine.dia)` to `r max(all.data$meta$turbine.dia)` m, while hub heights range from `r min(all.data$meta$turbine.height)` to `r max(all.data$meta$turbine.height)` m.
 
-```{r plot turbine year and size, echo=FALSE}
+```{r plot turbine year and size, fig.width = 6.5, fig.height = 3.5, echo=FALSE}
 PlotAllTurbineYearSizeDia(all.data$meta,
                           plot.label,
                           output.dir)
@@ -221,7 +225,8 @@ PlotAllTurbineYearSizeDia(all.data$meta,
 ## Turbine Locations
 The coutry in which the turbine was located was reported in `r NROW(na.omit(all.data$meta$Geography.country))` of the data sets. 
 
-```{r Histogram of turbine locations, echo=FALSE, fig.width = 6.5, fig.height = 3.5 }
+```{r Histogram of turbine locations, echo=FALSE, fig.width = 6.5, fig.height = 3.5, fig.cap="Turbine locations by country"}
+
 PlotAllTurbineLocations(all.data$meta,
                         plot.label,
                         output.dir)
@@ -237,39 +242,26 @@ MapAllTurbineLocations(all.data$meta,
 
 ```
 
-# Aggregated results
-In this section, data from all of the individual submissions have been combined. 
+# Results
+In this section, data from all of the individual data sets have been combined. 
 
-## Baseline Inner and Outer Range Error Histograms
+## Errors versus wind speed
+Error may reasonably be expected to be a function of wind speed. In order to maintain confidentiality, wind speeds were normalized with respect to rated wind speed (?which one?) by the PCWG tool, and errors were binned into 1-m/s bins. Results for five different methods are shown in the following plots. They include
 
+* The baseline method
+* The rotor-equivalent wind speed method (REWS)
+* The turbulence correction method
+* The turbulence correction method using REWS wind speeds, and 
+* The power deviation matrix.
 
-```{r baseline inner and outer range histogram, echo = FALSE, fig.width = 6.5, fig.height = 3.5}
-PlotAllBaselineErrorsByRange(all.data$errors$by.Range,
-                             plot.label,
-                             output.dir)
-```
-
-## Comparison of inner and outer range errors
-
-plot baseline inner range versus other inner range NME, color by method
-
-
-## The Effect of The Turbulence Correction on the Outer Range Error
-```{r, echo = FALSE, fig.width = 6.5, fig.height = 3.5}
-PlotAllOuterErrorsTurbulenceCorrection(all.data$errors$by.Range,
-                                       plot.label,
-                                       output.dir)
-```
-
-## Errors versus wind speed for all submissions
-
-```{r, echo=FALSE, fig.width = 6.5, fig.height = 3.5}
+```{r, echo=FALSE, fig.width = 6.5, fig.height = 4.5}
 PlotAllErrorsByWSBin_Lines(all.data$errors$by.WS,
                            plot.label,
                            output.dir)
 ```               
 
 ## Errors Binned by Wind Speed
+The following plot shows the error in each wind speed bin, grouped by correction method. Data are plotted using a box with whiskers that shows the variation of the error in each wind speed bin. Outliers are shown as black points.
 
 ```{r, echo=FALSE,  fig.width = 6.5, fig.height = 3.5}
 PlotAllErrorsByWSBin_BoxNWhiskers(all.data$errors$by.WS,
@@ -278,6 +270,8 @@ PlotAllErrorsByWSBin_BoxNWhiskers(all.data$errors$by.WS,
 ```               
 
 ## Change in errors binned by Wind Speed
+The following plot shows the change in errors for each data set in each wind speed bin, compared to the baseline method. A positive value implies that the error in the bin has increased, while a negative value implies that the error has decreased. Data are plotted using a box with whiskers that shows the variation of the change in each wind speed bin.
+
 ```{r, echo=FALSE, fig.width = 6.5, fig.height = 3.5}
 # work out the change compared to the baseline in each data set
 temp <- NULL
@@ -305,6 +299,41 @@ PlotAllChangeInErrorsByWSBin(temp,
                              output.dir)
 
 remove(temp)
+```
+
+
+## Baseline Inner and Outer Range Error Histograms
+The following plot compares the normalized mean error (NME) for the inner and outer range for the baseline power curve. The error is the difference between xx and xx.
+
+The inner and outer range are defined in the PCWG's 2013 Proposal (see http://www.pcwg.org/proposals/PCWG-Inner-Outer-Range-Proposal-Dec-2013.pdf) as:
+
+* __The Inner Range__: the range of conditions for which one can expect to achieve an Annual Energy Production (AEP) of 100% (relative to a reference power curve).
+* __The Outer Range__: the range of conditions for which one can expect to achieve an AEP of less than 100%. Stated another way the outer range is the range of all possible conditions excluding those in the inner range.
+
+Based on this definition, it would be expected that the error in the inner range would be less than the error in the outer range. This expectation is supported by the following figure.
+
+```{r baseline inner and outer range histogram, echo = FALSE, fig.width = 6.5, fig.height = 3.5}
+PlotAllBaselineErrorsByRange(all.data$errors$by.Range,
+                             plot.label,
+                             output.dir)
+```
+
+## The Effect of The Turbulence Correction on the Outer Range Error
+The PCWG investigated the effect of turbulence on the power curve uncertainty. The effect of turbulence was to be accounted for using the turbulence correction approach. If this approach were succesful, we would expect to see reduced error with the turbulence correction, compared to the baseline. A comparison of the outer range error with and without turbulence correction is shown in the following figure.
+
+```{r, echo = FALSE, fig.width = 6.5, fig.height = 3.5}
+PlotAllOuterErrorsTurbulenceCorrection(all.data$errors$by.Range,
+                                       plot.label,
+                                       output.dir)
+```
+
+# The Effect of Other Corrections
+A similar analysis as in the previous section can be applied to the improvement in both the inner and outer range. The following plot shows the difference in the error in each data set in the inner or outer range, compared to the baseline method. The 1:1 line is shown for comparison; a data point below the line has a lower normalized mean error with the correction, than it had with the baseline method. The number of data sets with each correction is also shown, together with the percentage of the data sets that showed an improvement using this correction.
+
+```{r plot improvement, fig.width = 6.5, fig.height = 4.5, echo=FALSE}
+PlotImprovementByRangeAndCorrection(all.data$errors$by.Range,
+                                    plot.label,
+                                    output.dir)
 ```
 
 ## Errors Binned by Wind Speed and Ti
@@ -339,4 +368,4 @@ for (file in unique(all.data$errors$by.4CM$data.file)){
 PlotAllChangeInErrorsBy4CM(temp,
                            plot.label,
                            output.dir)
-```               
+```             

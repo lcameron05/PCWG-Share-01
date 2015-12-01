@@ -1,4 +1,4 @@
-subCSVToRange <- function(text.in){
+CSVToRange <- function(text.in){
   # supress warnings
   oldw <- getOption("warn")
   options(warn = -1)

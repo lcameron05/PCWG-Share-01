@@ -16,31 +16,31 @@ ReadErrorData <- function(wb){
   for (sheet in sheets){
     # by wind speed
     by.WS <- rbind(by.WS,
-                   subExpandErrorByWSDF(subReadWSErrorData(wb,sheet),
+                   ExpandErrorByWSDF(ReadWSErrorData(wb,sheet),
                                         sheets))
     # by time of day
     by.TOD <- rbind(by.TOD,
-                    subExpandErrorByTODDF(subReadTODErrorData(wb,sheet),
+                    ExpandErrorByTODDF(ReadTODErrorData(wb,sheet),
                                           sheets))
     
     # by calendar month
     by.CM <- rbind(by.CM,
-                   subExpandErrorByCMDF(subReadCMErrorData(wb,sheet),
+                  ExpandErrorByCMDF(ReadCMErrorData(wb,sheet),
                                         sheets))
     
     # by wind direction
     by.WD <- rbind(by.WD,
-                   subExpandErrorByWDDF(subReadWDErrorData(wb,sheet),
+                   ExpandErrorByWDDF(ReadWDErrorData(wb,sheet),
                                         sheets))
     
     # by range
     by.Range <- rbind(by.Range,
-                   subExpandErrorByRangeDF(subReadRangeErrorData(wb,sheet),
+                   ExpandErrorByRangeDF(ReadRangeErrorData(wb,sheet),
                                         sheets))
     
     # from four-cell matrix
     by.4CM <- rbind(by.4CM,
-                    subExpandErrorBy4CMDF(subRead4CMErrorData(wb,sheet),
+                    ExpandErrorBy4CMDF(Read4CMErrorData(wb,sheet),
                                             sheets))
     
   }

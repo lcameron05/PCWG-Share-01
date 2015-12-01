@@ -1,5 +1,5 @@
-subRead4CMErrorData <- function(wb,sheet){
-  # reads a PCWG Share 01 file and returns data about the error
+ReadWSErrorData <- function(wb,sheet){
+  # reads a PCWG Share 01 file and returns data about the baseline accuracy
   #
   # Args:
   # data.file: name of the data file to be read
@@ -11,10 +11,10 @@ subRead4CMErrorData <- function(wb,sheet){
   setMissingValue(wb," ")
   
   # get data...
-  # By Four Cell Matrix
+  # By normalized wind speed bin
   bin = paste(as.character(readWorksheet(wb,
                                          sheet = sheet,
-                                         region = "D27:G27",
+                                         region = "D7:R7",
                                          header = FALSE,
                                          autofitCol = FALSE,
                                          autofitRow= FALSE)),
@@ -22,7 +22,7 @@ subRead4CMErrorData <- function(wb,sheet){
               sep=" ")
   data.count = paste(as.character(readWorksheet(wb,
                                                 sheet = sheet,
-                                                region = "D28:G28",
+                                                region = "D8:R8",
                                                 header = FALSE,
                                                 autofitCol = FALSE,
                                                 autofitRow= FALSE)),
@@ -30,7 +30,7 @@ subRead4CMErrorData <- function(wb,sheet){
                      sep=" ")
   NME = paste(as.character(readWorksheet(wb,
                                          sheet = sheet,
-                                         region = "D29:G29",
+                                         region = "D9:R9",
                                          header = FALSE,
                                          autofitCol = FALSE,
                                          autofitRow= FALSE)),
@@ -38,7 +38,7 @@ subRead4CMErrorData <- function(wb,sheet){
               sep=" ")
   NMAE = paste(as.character(readWorksheet(wb,
                                           sheet = sheet,
-                                          region = "D30:G30",
+                                          region = "D10:R10",
                                           header = FALSE,
                                           autofitCol = FALSE,
                                           autofitRow= FALSE)),

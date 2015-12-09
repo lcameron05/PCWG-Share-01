@@ -37,6 +37,7 @@ Please use the wiki at https://github.com/AndyClifton/PCWG-Share-01/wiki as you 
 This software is provided as is, with no guarantees.
 
 #Recent changes
+12.08.2015 Added logic to pick up data from specific versions. Plots modified to split out different corrections  / regions from each other.
 11.30.2015 First commit.
 
 #Code Maintainers

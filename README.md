@@ -15,8 +15,8 @@ Click on the "Download ZIP" button on the lower right of this page.
 3. Open `PCWG_share_01_main.rmd` in Rstudio. 
   1. Modify `project.root` to be `$root`.
   2. Decide if you intend the results to be public. If you do, set `data.public` to `TRUE`. This will prevent any details of the individual data sets being shown. If `data.public` is `FALSE`, all results will be printed.
-  3. Decide if you want to reanalyze data. This should be `TRUE` the first time you run the code. Afterwards you can set this to `FALSE` to just generate plots.
-4. Run `PCWG_share_01_main.rmd` in Ristudio. Either:
+  3. Decide if you want to reanalyze raw data and set `data.analyze.raw`. This should be `TRUE` the first time you run the code. Afterwards you can set this to `FALSE` to just generate plots.
+4. Run `PCWG_share_01_main.rmd` in Rstudio. Either:
   1. hit `chunks -> run all` to run all of the R code and not generate any output PDF or HTML files.
   2. hit `knit HTML` to generate the html results file; this will create an HTML file but will not generate any data in memory
   3. hit `knit PDF` to generate the html results file; this will create an HTML file but will not generate any data in memory

@@ -1,5 +1,6 @@
 PlotAllOuterErrorsTurbulenceCorrection <- function(df,
-                                                   plot.label,
+                                                   sw.version = "",
+                                                   sw.version.logic = "equals",
                                                    output.dir = getwd()){
   # plots baseline errors
   #
@@ -14,6 +15,21 @@ PlotAllOuterErrorsTurbulenceCorrection <- function(df,
   # supress warnings
   oldw <- getOption("warn")
   options(warn = -1)
+  
+  # filter by software version
+  if (sw.version == ""){
+    # get all versions
+  } else {
+    # get specific software version
+    df <- SelectDatabySWVersion(df,
+                                sw.version,
+                                sw.version.logic)
+  }
+  
+  # create the plot label
+  plot.label <- labelAggregate(as.character(NROW(unique(df$data.file))),
+                               df$sw.version,
+                               made.by)
   
   # get the data we want
   df <- df[((df$correction == "Baseline") | (df$correction == "Turbulence Correction")) &
@@ -53,17 +69,26 @@ PlotAllOuterErrorsTurbulenceCorrection <- function(df,
   print(p)
   makeFootnote(plot.label)
   
+  if (sw.version == ""){
+    filename = paste0("OuterRangeTurbulenceCorrectionHistogram_allSWversions.png")
+  } else {
+    filename = paste0("OuterRangeTurbulenceCorrectionHistogram_SWVersion",
+                      sw.version.logic,
+                      sw.version,
+                      ".png")
+  }
+  
   png(filename = file.path(output.dir,
-                           "OuterRangeTurbulenceCorrectionHistogram.png"),
+                           filename),
       width = 6, 
       height = 4, 
       units = "in", 
-      pointsize = 12, 
+      pointsize = 10, 
       res = 300,
       bg = "white")
   print(p)
   makeFootnote(plot.label,
-               base.size = 8)
+               base.size = 6)
   dev.off()
   
   # turn warnings back on

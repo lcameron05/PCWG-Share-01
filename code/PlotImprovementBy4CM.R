@@ -1,7 +1,7 @@
-PlotImprovementByRangeAndCorrection <- function(df,
-                                                sw.version = "",
-                                                sw.version.logic = "equals",
-                                                ouput.dir = file.path(getwd(),'analysis','all')){
+PlotImprovementBy4CM <- function(df,
+                                 sw.version = "",
+                                 sw.version.logic = "equals",
+                                 ouput.dir = file.path(getwd(),'analysis','all')){
   # plots metadata for PCWG Share 01 
   #
   # Args:
@@ -31,23 +31,26 @@ PlotImprovementByRangeAndCorrection <- function(df,
                                df$sw.version,
                                made.by)
   
+  # create a "cell" value that we can look for
+  df$cell <- paste0(df$WS.cell,
+                    ", ",
+                    df$Ti.cell)
+  
   # get the reference data
   df.ref <- df[(df$error.name == "NME") & (df$correction == "Baseline"),
-               c("data.file","range","error.val.pc")]
+               c("data.file","cell","error.val.pc")]
   colnames(df.ref)[colnames(df.ref) == 'error.val.pc'] <- 'baseline.error.val.pc'
   
-  
-  
   df.other <- df[(df$error.name == "NME")&(df$correction != "Baseline"),
-                 c("data.file","range","correction","error.val.pc")]
+                 c("data.file","cell","correction","error.val.pc")]
   
   df2 <- merge(df.other,
                df.ref,
-               by = c("data.file","range"))
+               by = c("data.file","cell"))
   
   df2$imp <- (abs(df2$error.val.pc) < abs(df2$baseline.error.val.pc))
   
-  df.imp <- aggregate(cbind(label=imp)~correction+range,
+  df.imp <- aggregate(cbind(label=imp)~correction+cell,
                       data = df2,
                       FUN = function(x){
                         n = length(as.numeric(x))
@@ -71,12 +74,12 @@ PlotImprovementByRangeAndCorrection <- function(df,
                colour = "black") +
     geom_point(aes(colour = abs(error.val.pc) < abs(baseline.error.val.pc)),
                size= 1.5,
-               alpha = 0.75) + 
+               alpha = 0.75) +
     scale_colour_brewer(type = "qual",
                         palette= 7,
                         drop = TRUE,
                         name = "Improved?") +
-    facet_grid(range~correction) +
+    facet_grid(cell ~ correction) +
     geom_text(data = df.imp, 
               x = 0.95*-max.error,
               y = 0.95*max.error,
@@ -88,20 +91,21 @@ PlotImprovementByRangeAndCorrection <- function(df,
               vjust = 1,
               size=6/ptspermm ) +
     scale_y_continuous(name = "Normalized Mean Error with Corrections (%)") +
-    scale_x_continuous(name = "Baseline Normalized Mean Error (%)")+
+    scale_x_continuous(name = "Baseline Normalized Mean Error (%)") +
     coord_cartesian(xlim = c(-max.error, max.error),
                     ylim = c(-max.error,max.error)) 
-  theme(legend.position="bottom",
-        aspect.ratio = 1)
+    theme(legend.position="bottom",
+          aspect.ratio = 1)
   
-  #+ fig.height = 4, fig.width = 6
+  #+ fig.height = 6, fig.width = 6
   print(p)
-  makeFootnote(plot.label)
+  makeFootnote(plot.label,
+               base.size = 6)
   
   if (sw.version == ""){
-    filename = paste0("ImprovementByRangeAndCorrection_allSWversions.png")
+    filename = paste0("ImprovementBy4CM_allSWversions.png")
   } else {
-    filename = paste0("ImprovementByRangeAndCorrection_SWVersion",
+    filename = paste0("ImprovementBy4CM_SWVersion",
                       sw.version.logic,
                       sw.version,
                       ".png")
@@ -110,7 +114,7 @@ PlotImprovementByRangeAndCorrection <- function(df,
   png(filename = file.path(output.dir,
                            filename),
       width = 6, 
-      height = 4, 
+      height = 6, 
       units = "in", 
       pointsize = 10, 
       res = 300,

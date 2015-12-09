@@ -1,7 +1,7 @@
 PlotAllErrorsBy4CM <- function(df,
                                plot.label,
                                output.dir = getwd()){
-  # plots errors in a PCWG Share 01 file by calendar month
+  # plots errors in a PCWG Share 01 file by location in four-cell matrix
   #
   # Args:
   # *.error summary of errors
@@ -39,12 +39,12 @@ PlotAllErrorsBy4CM <- function(df,
       width = 6, 
       height = 4, 
       units = "in", 
-      pointsize = 12, 
+      pointsize = 10, 
       res = 300,
       bg = "white")
   print(p1)
   makeFootnote(plot.label,
-               base.size = 8)
+               base.size = 6)
   dev.off()
   
   # turn warnings back on

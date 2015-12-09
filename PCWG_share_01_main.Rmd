@@ -19,7 +19,7 @@ install R (<http://www.r-project.org>) and Rstudio (<http://www.rstudio.com>), a
 rm(list = ls())
 ```
 ## User Inputs
-The _project.root_ variable defines the location of the files required for this analysis. The _made.by_ variable forms part of a label that will be added to the plots. _data.public_ is a flag that indicates whether the results of the analysis are intended to be public, or not. _data.reanalyze_ is a flag that indicates whether individual data files should be reanalyzed (_data.reanalyze = TRUE_) or whether saved, aggregated data should be used (_data.reanalyze = FALSE_). 
+The _project.root_ variable defines the location of the files required for this analysis. The _made.by_ variable forms part of a label that will be added to the plots. _data.public_ is a flag that indicates whether the results of the analysis are intended to be public, or not. _data.analyze.raw_ is a flag that indicates whether individual data files should be (re)analyzed (_data.analyze.raw = TRUE_) or whether saved, aggregated data should be used (_data.analyze.raw = FALSE_). 
 
 The following user inputs were used in the preparation of this document:
 
@@ -34,10 +34,16 @@ made.by = "A. Clifton, NREL"
 data.public = TRUE
 
 # Reanalyze existing data?
-data.reanalyze = FALSE
+data.analyze.raw = FALSE
+
+# Do not load versions of the tool before...
+# will be ignored if "" is used
+data.version.earliest =""
 ```
 
-```{r check for old data, results="asis", echo = FALSE}
+Note that _data.version.earliest_ is used to limit the data that are processed; data before this version number will not be used. Also, a major change in data processing occurred in version 0.5.9 of the PCWG tool. Therefore, the functions used in the preparation of this document have two inputs (_sw.version_ and _sw.version.logic_) that can be used to select the data that are used for each plot.
+
+```{r check old data actually exists, results="asis", echo = FALSE}
 # define the path to the directory that we will use to store all of the data
 output.dir = file.path(project.root, 
                        "analysis",
@@ -47,13 +53,13 @@ dir.create(output.dir,
            showWarnings = FALSE,
            recursive = TRUE)
 
-# check for existing data. If none exists, set data.reanalyze back to TRUE
-if (data.reanalyze == FALSE){
+# check for existing data. If none exists, set data.analyze.raw back to TRUE
+if (data.analyze.raw == FALSE){
   if (file.exists(file.path(output.dir,"AggregatedData.RData"))){
     cat(text = "\n This document was produced from data saved at ", file.path(output.dir,"AggregatedData.RData"), "\n")
   } else {
     cat(text = "\nThis document was produced from raw data files.\n")
-    data.reanalyze <- TRUE
+    data.analyze.raw <- TRUE
   }
 } else {
   cat(text = "\nThis document was produced from raw data files.\n")
@@ -62,7 +68,7 @@ if (data.reanalyze == FALSE){
 ```
 
 ## Packages
-This script requires the _ggplot2_, _grid_, _knitr_, _RColorBrewer_, _rgdal_, and _XLConnect_ packages to run. These are called from the script but you may need to install them directly. For details of how to install packages, see the RStudio help. 
+This script requires the _ggplot2_, _grid_, _knitr_, _RColorBrewer_, _rgdal_, _stringr_, and _XLConnect_ packages to run. These are called from the script but you may need to install them directly. For details of how to install packages, see the RStudio help. 
 
 ```{r load packages, message=FALSE, echo = FALSE}
 require(ggplot2)
@@ -70,6 +76,7 @@ require(grid)
 require(XLConnect)
 require(knitr)
 require(reshape2)
+require(stringr)
 ```
 
 ## Directory structure
@@ -99,7 +106,9 @@ The folowing files should be placed in the _project.root_ directory:
 * PCWG_share_01_main.Rmd
 * /__analysis__ directory containg results of the analysis
 * /__code__ directory containing functions required for the analysis
-* /__data__ directory containing all data files to be analyzed. This can include further sub directories. All .xls files contained in __data__ and sub directories will be used in the analysis.
+* /__data__ directory containing all data files to be analyzed. This can include further sub directories. 
++ All .xls files contained in __data__ and sub directories will be used in the analysis.
++ A __metaData.R__ file can be added to __data__ and include the line _data.supplier.type <- <<supplier type>>_, where <<<<supplier type>> could be one of "Consultant", "Developer", "Owner/Operator", or "OEM". 
 
 ```{r configure graphics, message=FALSE, echo = FALSE}
 # configure graphics appearance
@@ -112,78 +121,129 @@ theme_set(theme_PCWG(base_size = 8,
 We now analyse the data from each data set. The plots are saved to their own directories in the _analysis_ directory. If _data.public_ is FALSE, plots will be created for every data set. If _data.public_ is TRUE, only the final, aggregated data plots will be created.
 
 ```{r load individual data files, results='asis', echo = FALSE}
-
-if (data.reanalyze == TRUE){
+# set a counter to check for numbers of files that are data.version.earliest or later
+count.version = 0
+if (data.analyze.raw == TRUE){
   # identify the data sets that we have available
   data.files = dir(data.dir, 
                    recursive = TRUE,
-                   pattern = "[.xls]")
+                   pattern = ".xls")
   
   # create an empty list to store data in at a later date 
   all.data <- list(sub = NULL,
                    meta = NULL,
                    errors = NULL)
   for (data.file in data.files){
-    # Read this data set
+    # Read this data set;
+    # open the excel sheet
     wb <- loadWorkbook(file.path(data.dir,data.file))
+    # read the submission data
     in.sub <- ReadSubmissionData(wb)
     in.sub$data.file <- data.file
-    in.meta <- ReadMetaData(wb)
-    in.meta$data.file <- data.file
-    # get *all* errors
-    in.errors <- ReadErrorData(wb)
-    
-    if (data.public == FALSE){
-      # write out results from this case to file and to the document  
-      cat(text = "\n## Data set", in.sub$random.ID, "from", data.file, "\n")
-      # check to see if we have a directory for this case
-      output.dir = file.path(project.root, 
-                             "analysis",
-                             strsplit(data.file, "\\.")[[1]][1])
-      dir.create(output.dir, showWarnings = FALSE,recursive = TRUE)
-      
-      # create a label we'll use to annotate plots
-      plot.label <- labelSubmission(in.sub,
-                                    made.by)
-      # plot errors
-      if (NROW(na.omit(in.errors$by.WS$error.val.pc)) >=1){
-        PlotSubErrorsByWS(in.errors$by.WS,
-                          plot.label,
-                          output.dir)
-      }
-      if (NROW(na.omit(in.errors$by.TOD$error.val.pc)) >=1){
-        PlotSubErrorsByTOD(in.errors$by.TOD,
-                           plot.label,
-                           output.dir)
-      }
-      if (NROW(na.omit(in.errors$by.CM$error.val.pc)) >=1){
-        PlotSubErrorsByCM(in.errors$by.CM,
-                          plot.label,
-                          output.dir)
-      }
-      if (NROW(na.omit(in.errors$by.WD$error.val.pc)) >=1){
-        PlotSubErrorsByWD(in.errors$by.WD,
-                          plot.label,
-                          output.dir)
-      }
-      if (NROW(na.omit(in.errors$by.4CM$error.val.pc)) >=1){
-        PlotSubErrorsBy4CM(in.errors$by.4CM,
-                           plot.label,
-                           output.dir)
-      }
-      
-      # dummy text to clear knitr buffers  
-      cat(text = "\n")
+    # check the version
+    if (data.version.earliest  !=""){
+      # return 1 if the imported file is later than data.version.earliest 
+      # return 0 if the imported file is the same as data.version.earliest 
+      do.continue = compareVersion(substr(in.sub$sw.version, start =1, stop =5),
+                                   data.version.earliest )
+      #
+    } else {
+      do.continue = 0
     }
     
-    # prepare data for aggregation
-    all.data <- aggregateDataSets(all.data,
-                                  in.sub,
-                                  in.meta,
-                                  in.errors)
+    # depending on how up to date the version is, continue or stop
+    if (do.continue < 0){
+      print(paste0("Checking software versions. ", data.file ,
+                   " was produced using ", in.sub$sw.version,
+                   ": skipping file."))
+      rm(list = c("wb","in.sub"))
+    } else {
+      print(paste0("Checking software versions. ", data.file ,
+                   " was produced using ", in.sub$sw.version,
+                   ": using file."))
+      count.version = count.version+1
+      
+      # keep going; read more of the file
+      # read the meta data
+      in.meta <- ReadMetaData(wb)
+      meta.data.file <- file.path(data.dir,
+                                  dirname(data.file),
+                                  "metaData.R")
+      if (file.exists(meta.data.file)){
+        # read the meta data file associated with the entire submission
+        source(file = meta.data.file)
+        in.meta$data.supplier.type <- data.supplier.type 
+      } else {
+        in.meta$data.supplier.type <- NA
+      }
+      # append all of this good stuff
+      in.meta$data.file <- data.file
+      in.meta$sw.version <- in.sub$sw.version
+      
+      # read *all* errors
+      in.errors <- ReadErrorData(wb,
+                                 in.sub$sw.version)
+      
+      if (data.public == FALSE){
+        # write out results from this case to file and to the document  
+        cat(text = "\n## Data set", in.sub$random.ID, "from", data.file, "\n")
+        # check to see if we have a directory for this case
+        output.dir = file.path(project.root, 
+                               "analysis",
+                               strsplit(data.file, "\\.")[[1]][1])
+        dir.create(output.dir, showWarnings = FALSE,recursive = TRUE)
+        
+        # create a label we'll use to annotate plots
+        plot.label <- labelSubmission(in.sub,
+                                      made.by)
+        # plot errors
+        if (NROW(na.omit(in.errors$by.WS$error.val.pc)) >=1){
+          PlotSubErrorsByWS(in.errors$by.WS,
+                            plot.label,
+                            output.dir)
+        }
+        if (NROW(na.omit(in.errors$by.TOD$error.val.pc)) >=1){
+          PlotSubErrorsByTOD(in.errors$by.TOD,
+                             plot.label,
+                             output.dir)
+        }
+        if (NROW(na.omit(in.errors$by.CM$error.val.pc)) >=1){
+          PlotSubErrorsByCM(in.errors$by.CM,
+                            plot.label,
+                            output.dir)
+        }
+        if (NROW(na.omit(in.errors$by.WD$error.val.pc)) >=1){
+          PlotSubErrorsByWD(in.errors$by.WD,
+                            plot.label,
+                            output.dir)
+        }
+        if (NROW(na.omit(in.errors$by.4CM$error.val.pc)) >=1){
+          PlotSubErrorsBy4CM(in.errors$by.4CM,
+                             plot.label,
+                             output.dir)
+        }
+        
+        # dummy text to clear knitr buffers  
+        cat(text = "\n")
+      }
+      
+      # prepare data for aggregation
+      all.data <- aggregateDataSets(all.data,
+                                    in.sub,
+                                    in.meta,
+                                    in.errors)
+    }
   }
 }
 ```
+
+``` {r check we have data, echo = FALSE}
+if ((count.version == 0)& (data.analyze.raw==TRUE)){
+  stop("No data found.\n Check $count.version is empty or contains a sensible value, for example '0.5.10'.")
+  
+}
+```
+
 
 ``` {r save data, echo=FALSE}
 # define the path to the directory that we will use to store all of the data
@@ -192,10 +252,11 @@ output.dir = file.path(project.root,
                        "all")
 
 # save the data
-if (data.reanalyze == TRUE){
+if (data.analyze.raw == TRUE){
   save(list = c("project.root",
                 "made.by",
                 "data.public",
+                "data.version.earliest",
                 "working.dir",
                 "output.dir",
                 "all.data"), 
@@ -206,40 +267,70 @@ if (data.reanalyze == TRUE){
 }
 ```
 
-```{r plot labels, echo=FALSE}
-# create a label we'll use for the plots
-plot.label <- labelAggregate(as.character(NROW(all.data$sub)),
-                             made.by)
-```
-
 # Data Sets
+## Data Suppliers
+Data suppliers were categorized according to the role they play in the wind industry. Roles include:
+* Consultants: providing technical services to others but with no financial interest in the development or operation of the wind plant
+* Developers: site, design, and plan (or carry out) construction of prospective wind plants.
+* Owner/operators: have a finacial stake in the wind plant and are involved with some or all of the day-to-day running of the wind plant
+* Original Equipment Manufacturers (OEMs): design, manufature, and maintain wind turbines 
+
+```{r Histogram of data supplier types, echo=FALSE, fig.width = 6.5, fig.height = 3.5, fig.cap="Data Sources"}
+PlotAllDataSources(all.data$meta,
+                   sw.version = "0.5.8",
+                   sw.version.logic = "to",
+                   output.dir,
+                   made.by)
+PlotAllDataSources(all.data$meta,
+                   sw.version = "0.5.9",
+                   sw.version.logic = "from",
+                   output.dir,
+                   made.by)
+``` 
+
 ## Turbine Sizes
 In total, `r nrow(all.data$sub)` data sets were submitted. The `r nrow(all.data$sub)` data sets include tests carried out in the period from `r min(all.data$meta$year.of.measurement, na.rm=TRUE)` to `r max(all.data$meta$year.of.measurement, na.rm=TRUE)`. Turbine diameters range from `r min(all.data$meta$turbine.dia)` to `r max(all.data$meta$turbine.dia)` m, while hub heights range from `r min(all.data$meta$turbine.height)` to `r max(all.data$meta$turbine.height)` m.
 
 ```{r plot turbine year and size, fig.width = 6.5, fig.height = 3.5, echo=FALSE}
 PlotAllTurbineYearSizeDia(all.data$meta,
-                          plot.label,
-                          output.dir)
+                          sw.version = "0.5.8",
+                          sw.version.logic = "to",
+                          output.dir,
+                          made.by)
+
+PlotAllTurbineYearSizeDia(all.data$meta,
+                          sw.version = "0.5.9",
+                          sw.version.logic = "from",
+                          output.dir,
+                          made.by)
+
 ```
 
 ## Turbine Locations
 The coutry in which the turbine was located was reported in `r NROW(na.omit(all.data$meta$Geography.country))` of the data sets. 
 
 ```{r Histogram of turbine locations, echo=FALSE, fig.width = 6.5, fig.height = 3.5, fig.cap="Turbine locations by country"}
-
 PlotAllTurbineLocations(all.data$meta,
-                        plot.label,
-                        output.dir)
+                        sw.version = "0.5.8",
+                        sw.version.logic = "to",
+                        output.dir,
+                        made.by)
+PlotAllTurbineLocations(all.data$meta,
+                        sw.version = "0.5.9",
+                        sw.version.logic = "from",
+                        output.dir,
+                        made.by)
 ``` 
 
 Data were obtained from turbines in `r NROW(unique(na.omit(all.data$meta$Geography.country)))` countries including `r TextList(unique(na.omit(all.data$meta$Geography.country)))`. 
 
 ```{r Map of turbine locations, message = FALSE, echo=FALSE, fig.width = 6.5, fig.height = 3.5}
 MapAllTurbineLocations(all.data$meta,
-                       plot.label,
+                       sw.version = "0.5.8",
+                       sw.version.logic = "equals",
                        code.dir,
-                       output.dir)
-
+                       output.dir,
+                       made.by =made.by)
 ```
 
 # Results
@@ -256,51 +347,54 @@ Error may reasonably be expected to be a function of wind speed. In order to mai
 
 ```{r, echo=FALSE, fig.width = 6.5, fig.height = 4.5}
 PlotAllErrorsByWSBin_Lines(all.data$errors$by.WS,
-                           plot.label,
+                           data.range = "all",
+                           sw.version = "0.5.8",
+                           sw.version.logic = "to",
+                           output.dir)
+
+PlotAllErrorsByWSBin_Lines(all.data$errors$by.WS,
+                           data.range = "all",
+                           sw.version = "0.5.9",
+                           sw.version.logic = "from",
                            output.dir)
 ```               
 
 ## Errors Binned by Wind Speed
-The following plot shows the error in each wind speed bin, grouped by correction method. Data are plotted using a box with whiskers that shows the variation of the error in each wind speed bin. Outliers are shown as black points.
+The following plots show the error in each wind speed bin, grouped by correction method. Plots are provided for all data, the inner range, and the oter range. Data are plotted using a box with whiskers that shows the variation of the error in each wind speed bin. Outliers are shown as black points.
+
+###All Data
 
 ```{r, echo=FALSE,  fig.width = 6.5, fig.height = 3.5}
 PlotAllErrorsByWSBin_BoxNWhiskers(all.data$errors$by.WS,
-                                  plot.label,
+                                  data.range = "all",
+                                  sw.version = "0.5.8",
+                                  sw.version.logic = "to",
+                                  output.dir)
+
+PlotAllErrorsByWSBin_BoxNWhiskers(all.data$errors$by.WS,
+                                  data.range = "all",
+                                  sw.version = "0.5.9",
+                                  sw.version.logic = "from",
                                   output.dir)
 ```               
 
-## Change in errors binned by Wind Speed
-The following plot shows the change in errors for each data set in each wind speed bin, compared to the baseline method. A positive value implies that the error in the bin has increased, while a negative value implies that the error has decreased. Data are plotted using a box with whiskers that shows the variation of the change in each wind speed bin.
+###Inner Range
+```{r, echo=FALSE,  fig.width = 6.5, fig.height = 3.5}
+PlotAllErrorsByWSBin_BoxNWhiskers(all.data$errors$by.WS,
+                                  data.range = "Inner",
+                                  sw.version = "0.5.9",
+                                  sw.version.logic = "from",
+                                  output.dir)
+```               
 
-```{r, echo=FALSE, fig.width = 6.5, fig.height = 3.5}
-# work out the change compared to the baseline in each data set
-temp <- NULL
-for (file in unique(all.data$errors$by.WS$data.file)){
-  sub <- all.data$errors$by.WS[all.data$errors$by.WS$data.file == file,]
-  for (ds in unique(sub$correction)){
-    for (WS.cell in unique(sub$x.min)){
-      # get the reference NME and NMAE
-      baseline <- sub[(sub$correction == "Baseline") & 
-                        (sub$x.min == WS.cell),]
-      # get the NME and NMAE for this cell
-      new <- sub[(sub$correction == ds) & 
-                   (sub$x.min == WS.cell),]
-      delta <- data.frame(new,
-                          error.delta.pc = c(new$error.val.pc[new$error.name == "NME"] - baseline$error.val.pc[baseline$error.name == "NME"],
-                                             new$error.val.pc[new$error.name == "NMAE"] - baseline$error.val.pc[baseline$error.name == "NMAE"]))
-      temp <- rbind(temp,
-                    delta)
-    }
-  }
-}
-
-PlotAllChangeInErrorsByWSBin(temp,
-                             plot.label,
-                             output.dir)
-
-remove(temp)
-```
-
+###Outer Range
+```{r, echo=FALSE,  fig.width = 6.5, fig.height = 3.5}
+PlotAllErrorsByWSBin_BoxNWhiskers(all.data$errors$by.WS,
+                                  data.range = "Outer",
+                                  sw.version = "0.5.9",
+                                  sw.version.logic = "from",
+                                  output.dir)
+```               
 
 ## Baseline Inner and Outer Range Error Histograms
 The following plot compares the normalized mean error (NME) for the inner and outer range for the baseline power curve. The error is the difference between xx and xx.
@@ -314,8 +408,21 @@ Based on this definition, it would be expected that the error in the inner range
 
 ```{r baseline inner and outer range histogram, echo = FALSE, fig.width = 6.5, fig.height = 3.5}
 PlotAllBaselineErrorsByRange(all.data$errors$by.Range,
-                             plot.label,
+                             sw.version = "0.5.8",
+                             sw.version.logic = "to",
                              output.dir)
+
+PlotAllBaselineErrorsByRange(all.data$errors$by.Range,
+                             sw.version = "0.5.9",
+                             sw.version.logic = "from",
+                             output.dir)
+
+```
+
+```{r statistics, echo = TRUE}
+StatsByRange(all.data$errors$by.Range,
+             sw.version = "0.5.8",
+             sw.version.logic = "to") 
 ```
 
 ## The Effect of The Turbulence Correction on the Outer Range Error
@@ -323,7 +430,13 @@ The PCWG investigated the effect of turbulence on the power curve uncertainty. T
 
 ```{r, echo = FALSE, fig.width = 6.5, fig.height = 3.5}
 PlotAllOuterErrorsTurbulenceCorrection(all.data$errors$by.Range,
-                                       plot.label,
+                                       sw.version = "0.5.8",
+                                       sw.version.logic = "to",
+                                       output.dir)
+
+PlotAllOuterErrorsTurbulenceCorrection(all.data$errors$by.Range,
+                                       sw.version = "0.5.9",
+                                       sw.version.logic = "from",
                                        output.dir)
 ```
 
@@ -332,40 +445,43 @@ A similar analysis as in the previous section can be applied to the improvement 
 
 ```{r plot improvement, fig.width = 6.5, fig.height = 4.5, echo=FALSE}
 PlotImprovementByRangeAndCorrection(all.data$errors$by.Range,
-                                    plot.label,
+                                    sw.version = "0.5.8",
+                                    sw.version.logic = "to",
                                     output.dir)
+
+PlotImprovementByRangeAndCorrection(all.data$errors$by.Range,
+                                    sw.version = "0.5.9",
+                                    sw.version.logic = "from",
+                                    output.dir)
+
 ```
 
 ## Errors Binned by Wind Speed and Ti
-The following plot shows how effective each set of corrections is, for each of four combinations of wind speed and turbulence intensity. Data are plotted with respect to the baseline case for that combination, such that a positive change indicates an increase in error, and a negative change indicates a decrease in error.
+The following plot shows how effective each set of corrections is, for each of four combinations of wind speed and turbulence intensity. Data are plotted as $\left|\textrm{error}\right|_\textrm{with corrections} - \left|\textrm{error}\right|_\textrm{baseline}$. Therefore, a positive change indicates an increase in the magnitude of the error, and a negative change indicates a decrease in the magnitude of the error.
 
 ```{r, echo=FALSE, fig.width = 6.5, fig.height = 4.5}
-# work out the change compared to the baseline in each data set
-temp <- NULL
-for (file in unique(all.data$errors$by.4CM$data.file)){
-  sub <- all.data$errors$by.4CM[all.data$errors$by.4CM$data.file == file,]
-  for (ds in unique(sub$correction)){
-    for (WS.cell in unique(sub$WS.cell)){
-      for (Ti.cell in unique(sub$Ti.cell)){
-        # get the reference NME and NMAE
-        baseline <- sub[(sub$correction == "Baseline") & 
-                          (sub$WS.cell == WS.cell) &
-                          (sub$Ti.cell == Ti.cell),]
-        # get the NME and NMAE for this cell
-        new <- sub[(sub$correction == ds) & 
-                     (sub$WS.cell == WS.cell) &
-                     (sub$Ti.cell == Ti.cell),]
-        delta <- data.frame(new,
-                            error.delta.pc = c(new$error.val.pc[new$error.name == "NME"] - baseline$error.val.pc[baseline$error.name == "NME"],
-                                               new$error.val.pc[new$error.name == "NMAE"] - baseline$error.val.pc[baseline$error.name == "NMAE"]))
-        temp <- rbind(temp,
-                      delta)
-      }
-    }
-  }
-}
+# plot the change compared to the baseline in each data set
+PlotAllChangeInErrorsBy4CM(df.in = all.data$errors$by.4CM,
+                           sw.version = "0.5.8",
+                           sw.version.logic = "to",
+                           error.name = "NME",
+                           output.dir)
 
-PlotAllChangeInErrorsBy4CM(temp,
-                           plot.label,
+PlotAllChangeInErrorsBy4CM(df.in = all.data$errors$by.4CM,
+                           sw.version = "0.5.9",
+                           sw.version.logic = "from",
+                           error.name = "NMAE",
                            output.dir)
 ```             
+
+```{r}
+PlotImprovementBy4CM(all.data$errors$by.4CM,
+                     sw.version = "0.5.8",
+                     sw.version.logic = "to",
+                     output.dir)
+
+PlotImprovementBy4CM(all.data$errors$by.4CM,
+                     sw.version = "0.5.9",
+                     sw.version.logic = "from",
+                     output.dir)
+```

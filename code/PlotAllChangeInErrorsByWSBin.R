@@ -48,11 +48,12 @@ PlotAllChangeInErrorsByWSBin <- function(df,
       width = 6, 
       height = 4, 
       units = "in", 
-      pointsize = 12, 
+      pointsize = 10, 
       res = 300,
       bg = "white")
   print(p)
-  makeFootnote(plot.label)
+  makeFootnote(plot.label,
+               base.size = 6)
   dev.off()
   
   # turn warnings back on

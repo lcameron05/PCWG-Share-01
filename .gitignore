@@ -6,6 +6,7 @@
 /excluded data
 *.pdf
 *.html
+VersionComparison*.*
 
 # History files
 .Rhistory

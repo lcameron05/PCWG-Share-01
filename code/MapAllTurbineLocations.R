@@ -1,7 +1,9 @@
 MapAllTurbineLocations <- function(df,
-                                   plot.label,
+                                   sw.version = "",
+                                   sw.version.logic = "equals",
                                    code.dir,
-                                   output.dir){
+                                   ouput.dir = file.path(getwd(),'analysis','all'),
+                                   made.by = ""){
   
   # plots baseline errors
   #
@@ -18,6 +20,27 @@ MapAllTurbineLocations <- function(df,
   # supress warnings
   oldw <- getOption("warn")
   options(warn = -1)
+  
+  # get the maximum number of tests in any one country
+  nmax <- max(aggregate(cbind(count = data.type)~Geography.country,
+            data = df[!(is.na(df$Geography.country)),],
+            FUN = length)$count,
+            na.rm = TRUE)
+  
+  # filter by software version
+  if (sw.version == ""){
+    # get all versions
+  } else {
+    # get specific software version
+    df <- SelectDatabySWVersion(df,
+                                sw.version,
+                                sw.version.logic)
+  }
+  
+  # create the plot label
+  plot.label <- labelAggregate(as.character(NROW(df)),
+                               df$sw.version,
+                               made.by)
   
   # read world map
   world <- readOGR(dsn=file.path(code.dir,"worldmap"),
@@ -37,7 +60,8 @@ MapAllTurbineLocations <- function(df,
                                 x<-gsub("US","United States",x)
                                 x<-gsub("UK","United Kingdom",x)
                                 return(x)
-                              }))
+                              },
+                              simplify = FALSE))
   counts$count <- as.numeric(levels(counts$count))[counts$count]
   counts$Geography.country <- as.character(levels(counts$Geography.country))[counts$Geography.country]
   
@@ -65,8 +89,9 @@ MapAllTurbineLocations <- function(df,
                  size = 0.125)+
     geom_path(colour="grey50",
               size = 0.125)+
-    scale_fill_gradientn(name="N. Tests",
+    scale_fill_gradientn(name="N. Data Sets",
                          colours=rev(brewer.pal(9,"Spectral")),
+                         limits =c(0,nmax),
                          na.value="white")+
     coord_fixed() +
     scale_x_continuous(name = "",
@@ -80,8 +105,14 @@ MapAllTurbineLocations <- function(df,
   
   makeFootnote(plot.label)
   
+  if (sw.version == ""){
+    filename = paste0("AllTurbineLocations_Map_allSWversions.png")
+  } else {
+    filename = paste0("AllTurbineLocations_Map_SWVersion",sw.version,".png")
+  }
+  
   png(filename = file.path(output.dir,
-                           "AllTurbineLocations_Map.png"),
+                           filename),
       width = 6, 
       height = 4, 
       units = "in", 
@@ -90,7 +121,7 @@ MapAllTurbineLocations <- function(df,
       bg = "white")
   print(p)
   makeFootnote(plot.label,
-               base.size = 8)
+               base.size = 6)
   dev.off()
   
   # turn warnings back on

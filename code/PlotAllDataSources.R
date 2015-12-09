@@ -1,9 +1,9 @@
-PlotAllTurbineLocations <- function(df,
-                                    sw.version = "",
-                                    sw.version.logic = "equals",
-                                    ouput.dir = file.path(getwd(),'analysis','all'),
-                                    made.by = ""){
-
+PlotAllDataSources <- function(df,
+                               sw.version = "",
+                               sw.version.logic = "equals",
+                               ouput.dir = file.path(getwd(),'analysis','all'),
+                               made.by = ""){
+  
   # plots baseline errors
   #
   # Args:
@@ -19,8 +19,8 @@ PlotAllTurbineLocations <- function(df,
   options(warn = -1)
   
   # get the maximum number of tests in any one country
-  nmax <- max(aggregate(cbind(count = data.type)~Geography.country,
-                        data = df[!(is.na(df$Geography.country)),],
+  nmax <- max(aggregate(cbind(count = data.type)~data.supplier.type,
+                        data = df[!(is.na(df$data.supplier.type)),],
                         FUN = length)$count,
               na.rm = TRUE)
   
@@ -39,12 +39,12 @@ PlotAllTurbineLocations <- function(df,
                                df$sw.version,
                                made.by)
   
-    # plot
+  # plot
   p <- ggplot(data = df,
-              aes(x = Geography.country)) +
+              aes(x = data.supplier.type)) +
     geom_histogram() +
     scale_x_discrete(drop = FALSE,
-                     name = "Country") +
+                     name = "Data Sources") +
     scale_y_continuous(name = "Count")
   
   if (sw.version.logic == "equals"){
@@ -54,14 +54,14 @@ PlotAllTurbineLocations <- function(df,
       aes(fill = sw.version) +
       scale_fill_discrete(name = "Software\nVersion")
   }
-    
+  
   print(p)
   makeFootnote(plot.label)
   
   if (sw.version == ""){
-    filename = paste0("AllTurbineLocations_allSWversions.png")
+    filename = paste0("DataSources_allSWversions.png")
   } else {
-    filename = paste0("AllTurbineLocations_SWVersion",
+    filename = paste0("DataSources_SWVersion",
                       sw.version.logic,
                       sw.version,
                       ".png")

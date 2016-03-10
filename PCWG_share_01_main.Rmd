@@ -363,7 +363,8 @@ PlotAllErrorsByWSBin_Lines(all.data$errors$by.WS,
 ```               
 
 ### Errors grouped by magnitude of Error
-```{}
+The following figures show the error by wind speed for data sets with basleine inner range absolute NME greater than 2%.
+```{r Error by wind speed for high-NME data sets, echo=FALSE, fig.width = 6.5, fig.height = 4.5}
 # get the name of files with high baseline inner range NME
 data.files.NMEanom <- unique(as.character(all.data$errors$by.Range$data.file[(all.data$errors$by.Range$range == "Inner") & (abs(all.data$errors$by.Range$error.val.pc) > 2) & (all.data$errors$by.Range$correction == "Baseline") & (all.data$errors$by.Range$error.name == "NME")]))
 
@@ -374,7 +375,11 @@ PlotAllErrorsByWSBin_Lines(all.data$errors$by.WS[all.data$errors$by.WS$data.file
                            sw.version.logic = "from",
                            output.dir,
                            filename.suffix = "_absGT2pc")
+```
 
+The following figures show the error by wind speed for data sets with baseline inner range absolute NME less than or equal to 2%.
+
+```{r Error by wind speed for low-NME data sets, echo=FALSE, fig.width = 6.5, fig.height = 4.5}
 # get the name of files with low baseline inner range NME
 data.files.NMEusual <- unique(as.character(all.data$errors$by.Range$data.file[(all.data$errors$by.Range$range == "Inner") & (abs(all.data$errors$by.Range$error.val.pc) <= 2) & (all.data$errors$by.Range$correction == "Baseline") & (all.data$errors$by.Range$error.name == "NME")]))
 

@@ -34,10 +34,12 @@ made.by = "A. Clifton, NREL"
 data.public = TRUE
 
 # Reanalyze existing data?
-data.analyze.raw = FALSE
+data.analyze.raw = TRUE
 
 # Do not load versions of the tool before...
 # will be ignored if "" is used
+# use data versions in the form "x.x.x". 
+# Note that this may conflict with some code
 data.version.earliest =""
 ```
 
@@ -345,7 +347,8 @@ Error may reasonably be expected to be a function of wind speed. In order to mai
 * The turbulence correction method using REWS wind speeds, and 
 * The power deviation matrix.
 
-```{r, echo=FALSE, fig.width = 6.5, fig.height = 4.5}
+### All Errors
+```{r plot errors by wind speed bin using lines, echo=FALSE, fig.width = 6.5, fig.height = 4.5}
 PlotAllErrorsByWSBin_Lines(all.data$errors$by.WS,
                            data.range = "all",
                            sw.version = "0.5.8",
@@ -359,12 +362,37 @@ PlotAllErrorsByWSBin_Lines(all.data$errors$by.WS,
                            output.dir)
 ```               
 
+### Errors grouped by magnitude of Error
+```{}
+# get the name of files with high baseline inner range NME
+data.files.NMEanom <- unique(as.character(all.data$errors$by.Range$data.file[(all.data$errors$by.Range$range == "Inner") & (abs(all.data$errors$by.Range$error.val.pc) > 2) & (all.data$errors$by.Range$correction == "Baseline") & (all.data$errors$by.Range$error.name == "NME")]))
+
+# plot the eror by wind speed for those files
+PlotAllErrorsByWSBin_Lines(all.data$errors$by.WS[all.data$errors$by.WS$data.file %in% data.files.NMEanom,],
+                           data.range = "all",
+                           sw.version = "0.5.9",
+                           sw.version.logic = "from",
+                           output.dir,
+                           filename.suffix = "_absGT2pc")
+
+# get the name of files with low baseline inner range NME
+data.files.NMEusual <- unique(as.character(all.data$errors$by.Range$data.file[(all.data$errors$by.Range$range == "Inner") & (abs(all.data$errors$by.Range$error.val.pc) <= 2) & (all.data$errors$by.Range$correction == "Baseline") & (all.data$errors$by.Range$error.name == "NME")]))
+
+# plot the eror by wind speed for those files
+PlotAllErrorsByWSBin_Lines(all.data$errors$by.WS[all.data$errors$by.WS$data.file %in% data.files.NMEusual,],
+                           data.range = "all",
+                           sw.version = "0.5.9",
+                           sw.version.logic = "from",
+                           output.dir,
+                           filename.suffix = "_absLTEq2pc")
+```
+
 ## Errors Binned by Wind Speed
 The following plots show the error in each wind speed bin, grouped by correction method. Plots are provided for all data, the inner range, and the oter range. Data are plotted using a box with whiskers that shows the variation of the error in each wind speed bin. Outliers are shown as black points.
 
 ###All Data
 
-```{r, echo=FALSE,  fig.width = 6.5, fig.height = 3.5}
+```{r plot errors by wind speed bin using box-and-whiskers plot, echo=FALSE,  fig.width = 6.5, fig.height = 3.5}
 PlotAllErrorsByWSBin_BoxNWhiskers(all.data$errors$by.WS,
                                   data.range = "all",
                                   sw.version = "0.5.8",
@@ -379,7 +407,7 @@ PlotAllErrorsByWSBin_BoxNWhiskers(all.data$errors$by.WS,
 ```               
 
 ###Inner Range
-```{r, echo=FALSE,  fig.width = 6.5, fig.height = 3.5}
+```{r plot all inner range errors by wind speed using box and whiskers, echo=FALSE,  fig.width = 6.5, fig.height = 3.5}
 PlotAllErrorsByWSBin_BoxNWhiskers(all.data$errors$by.WS,
                                   data.range = "Inner",
                                   sw.version = "0.5.9",
@@ -388,7 +416,7 @@ PlotAllErrorsByWSBin_BoxNWhiskers(all.data$errors$by.WS,
 ```               
 
 ###Outer Range
-```{r, echo=FALSE,  fig.width = 6.5, fig.height = 3.5}
+```{r plot all outer range errors by wind speed using box and whiskers, echo=FALSE,  fig.width = 6.5, fig.height = 3.5}
 PlotAllErrorsByWSBin_BoxNWhiskers(all.data$errors$by.WS,
                                   data.range = "Outer",
                                   sw.version = "0.5.9",

@@ -52,79 +52,84 @@ PlotAllChangeInErrorsBy4CM <- function(df.in,
                                 sw.version.logic)
   }
   
-  # create the plot label
-  plot.label <- labelAggregate(as.character(NROW(unique(df$data.file))),
-                               df$sw.version,
-                               made.by)
-  
-  #filter by error type
-  if (error.name == ""){
+  # continue if we have data
+  if (NROW(df)>0){
+    # create the plot label
+    plot.label <- labelAggregate(as.character(NROW(unique(df$data.file))),
+                                 df$sw.version,
+                                 made.by)
     
-  } else if (error.name == "NME"){
-    df <- df[(df$error.name == "NME"),] 
-  } else if (error.name == "NMAE"){
-    df <- df[(df$error.name == "NMAE"),] 
-  }
-  
-  # plot the data by bin
-  p1 <- ggplot(data = df,
-               aes(x = correction,
-                   y = error.delta.pc)) + 
-    geom_hline(yintercept=0) +
-    geom_boxplot(outlier.size = 0.6) + 
-    facet_grid(WS.cell ~ Ti.cell,
-               as.table = FALSE) +
-    labs(x = "Corrections Applied",
-         y = "|Normalized Error with Corrections|\n - |Baseline Normalized Error| (%)") +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
-  
-  # change plot by error type
-  if (error.name == ""){
-    p1 <- p1 + 
-      aes(color = error.name) +
-      ggtitle("Change in Magnitude of Errors") +
-      scale_color_brewer(type="qual",
-                         palette = 7,
-                         name = "Error type")
-    base.filename <- "ChangeInErrorBy4CM"
-  } else if (error.name == "NME"){
-    p1 <- p1 + 
-      ggtitle("Change in Magnitude of Normalized Mean Error (NME)")
+    #filter by error type
+    if (error.name == ""){
+      
+    } else if (error.name == "NME"){
+      df <- df[(df$error.name == "NME"),] 
+    } else if (error.name == "NMAE"){
+      df <- df[(df$error.name == "NMAE"),] 
+    }
     
-    base.filename <- "ChangeInNMEBy4CM"
-  } else if (error.name == "NMAE"){
-    p1 <- p1 + 
-      ggtitle("Change in Magnitude of Normalized Mean Absolute Error (NMAE)")
+    # plot the data by bin
+    p1 <- ggplot(data = df,
+                 aes(x = correction,
+                     y = error.delta.pc)) + 
+      geom_hline(yintercept=0) +
+      geom_boxplot(outlier.size = 0.6) + 
+      facet_grid(WS.cell ~ Ti.cell,
+                 as.table = FALSE) +
+      labs(x = "Corrections Applied",
+           y = "|Normalized Error with Corrections|\n - |Baseline Normalized Error| (%)") +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1))
     
-    base.filename <- "ChangeInNMAEBy4CM"
-  }
-  
-  
-  print(p1)
-  makeFootnote(plot.label)
-  if (sw.version == ""){
-    filename = paste0(base.filename,
-                      "allSWversions.png")
+    # change plot by error type
+    if (error.name == ""){
+      p1 <- p1 + 
+        aes(color = error.name) +
+        ggtitle("Change in Magnitude of Errors") +
+        scale_color_brewer(type="qual",
+                           palette = 7,
+                           name = "Error type")
+      base.filename <- "ChangeInErrorBy4CM"
+    } else if (error.name == "NME"){
+      p1 <- p1 + 
+        ggtitle("Change in Magnitude of Normalized Mean Error (NME)")
+      
+      base.filename <- "ChangeInNMEBy4CM"
+    } else if (error.name == "NMAE"){
+      p1 <- p1 + 
+        ggtitle("Change in Magnitude of Normalized Mean Absolute Error (NMAE)")
+      
+      base.filename <- "ChangeInNMAEBy4CM"
+    }
+    
+    
+    print(p1)
+    makeFootnote(plot.label)
+    if (sw.version == ""){
+      filename = paste0(base.filename,
+                        "allSWversions.png")
+    } else {
+      filename = paste0(base.filename,
+                        "_SWVersion",
+                        sw.version.logic,
+                        sw.version,
+                        ".png")
+    }
+    
+    png(filename = file.path(output.dir,
+                             filename),
+        width = 6, 
+        height = 5, 
+        units = "in", 
+        pointsize = 10, 
+        res = 300,
+        bg = "white")
+    print(p1)
+    makeFootnote(plot.label,
+                 base.size = 6)
+    dev.off()
   } else {
-    filename = paste0(base.filename,
-                      "_SWVersion",
-                      sw.version.logic,
-                      sw.version,
-                      ".png")
+    message("No data found with the requested software version")
   }
-  
-  png(filename = file.path(output.dir,
-                           filename),
-      width = 6, 
-      height = 5, 
-      units = "in", 
-      pointsize = 10, 
-      res = 300,
-      bg = "white")
-  print(p1)
-  makeFootnote(plot.label,
-               base.size = 6)
-  dev.off()
   
   # turn warnings back on
   options(warn = oldw)

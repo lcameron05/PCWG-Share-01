@@ -3,7 +3,7 @@ theme_PCWG <- function (base_size = 12,
   theme(
     line = element_line(colour = "black", size = 0.5, linetype = 1, lineend = "butt"), 
     rect = element_rect(fill = "white", colour = "black", size = 0.5, linetype = 1), 
-    text = element_text(family = base_family, face = "plain", colour = "black", size = base_size, hjust = 0.5, vjust = 0.5, angle = 0, lineheight = 0.9), 
+    text = element_text(margin = margin(0), debug = FALSE, family = base_family, face = "plain", colour = "black", size = base_size, hjust = 0.5, vjust = 0.5, angle = 0, lineheight = 0.9), 
     
     axis.text = element_text(size = rel(0.8), colour = "grey50"), 
     strip.text = element_text(size = rel(0.8)), 
@@ -38,6 +38,7 @@ theme_PCWG <- function (base_size = 12,
     panel.margin = unit(0.25, "lines"), 
     panel.margin.x = NULL, 
     panel.margin.y = NULL, 
+    panel.ontop = TRUE,
     
     strip.background = element_rect(fill = "grey80", colour = NA), 
     strip.text.x = element_text(), 
